@@ -5,7 +5,7 @@ Creator: Claudio Raimondi
 Email: claudio.raimondi@pm.me                                                   
 
 created at: 2025-02-12 13:35:28                                                 
-last edited: 2025-02-26 21:40:21                                                
+last edited: 2025-02-27 19:27:40                                                
 
 ================================================================================*/
 
@@ -16,5 +16,6 @@ last edited: 2025-02-26 21:40:21
 # include "deserializer.h"
 
 //TODO explore <stdbit.h> for bit manipulation
+
 
 #endif

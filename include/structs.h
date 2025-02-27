@@ -5,7 +5,7 @@ Creator: Claudio Raimondi
 Email: claudio.raimondi@pm.me                                                   
 
 created at: 2025-02-13 13:38:07                                                 
-last edited: 2025-02-26 21:40:21                                                
+last edited: 2025-02-27 19:27:40                                                
 
 ================================================================================*/
 
@@ -14,14 +14,8 @@ last edited: 2025-02-26 21:40:21
 
 # include <stdint.h>
 
-# ifndef HTTP_MAX_HEADERS
-#  define HTTP_MAX_HEADERS 64
-# endif
-
-# define HEADER_MAP_DILUTION_FACTOR 5
-
-typedef enum: uint8_t {GET, POST, PUT, DELETE} http_method_t;
-typedef enum: uint8_t {HTTP_1_0, HTTP_1_1} http_version_t;
+typedef enum: uint8_t {GET, HEAD, POST, PUT, DELETE, CONNECT, OPTIONS, TRACE, PATCH, CONNECT} http_method_t; 
+typedef enum: uint8_t {HTTP_1_0, HTTP_1_1, HTTP_2_0, HTTP_3_0} http_version_t;
 
 //TODO alignment??
 //TODO const?
@@ -36,10 +30,9 @@ typedef struct
 
 typedef struct
 {
-  http_header_t headers[HTTP_MAX_HEADERS]; 
-  uint8_t n_entries;
+  http_header_t *entries;
   uint16_t size;
-} header_map_t;
+} http_header_map_t;
 
 typedef struct
 {
@@ -48,14 +41,14 @@ typedef struct
   uint8_t path_len;
   http_version_t version;
   http_header_t *headers;
-  uint8_t n_headers;
+  uint16_t headers_count;
   char *body;
   uint16_t body_len;
 } http_request_t;
 
 typedef struct
 {
-  http_header_t headers[HTTP_MAX_HEADERS];
+  http_header_map_t *headers;
   uint16_t headers_count;
   uint16_t status_code;
   char *body;
