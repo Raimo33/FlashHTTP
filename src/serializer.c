@@ -5,7 +5,7 @@ Creator: Claudio Raimondi
 Email: claudio.raimondi@pm.me                                                   
 
 created at: 2025-02-11 12:37:26                                                 
-last edited: 2025-02-27 19:27:40                                                
+last edited: 2025-02-27 19:39:29                                                
 
 ================================================================================*/
 
@@ -24,7 +24,7 @@ last edited: 2025-02-27 19:27:40
   //TODO define constants
 #endif
 
-CONSTRUCTOR void fh_serializer_init(void)
+CONSTRUCTOR void http_serializer_init(void)
 {
   //TODO initialize constants
 }
@@ -62,23 +62,21 @@ static const uint8_t methods_len[] = {
 
 static const char versions_str[][sizeof(uint64_t)] ALIGNED(64) = {
   [HTTP_1_0] = "HTTP/1.0",
-  [HTTP_1_1] = "HTTP/1.1"
-  [HTTP_2_0] = "HTTP/2.0"
+  [HTTP_1_1] = "HTTP/1.1",
+  [HTTP_2_0] = "HTTP/2.0",
   [HTTP_3_0] = "HTTP/3.0"
 };
 static const uint8_t versions_len[] = {
   [HTTP_1_0] = STR_LEN("HTTP/1.0"),
-  [HTTP_1_1] = STR_LEN("HTTP/1.1")
-  [HTTP_2_0] = STR_LEN("HTTP/2.0")
+  [HTTP_1_1] = STR_LEN("HTTP/1.1"),
+  [HTTP_2_0] = STR_LEN("HTTP/2.0"),
   [HTTP_3_0] = STR_LEN("HTTP/3.0")
 };
 
 static const char clrf[sizeof(uint16_t)] = "\r\n";
 static const char colon_space[sizeof(uint16_t)] = ": ";
 
-//TODO explore (frame-based structure, header compression, multiplexing, QUIC, etc.)
-
-uint32_t fh_serialize(const http_request_t *restrict request, char *restrict buffer)
+uint32_t http1_serialize(const http_request_t *restrict request, char *restrict buffer)
 {
   const char *buffer_start = buffer;
 

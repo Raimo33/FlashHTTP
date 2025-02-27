@@ -5,7 +5,7 @@ Creator: Claudio Raimondi
 Email: claudio.raimondi@pm.me                                                   
 
 created at: 2025-02-11 12:37:26                                                 
-last edited: 2025-02-26 21:40:21                                                
+last edited: 2025-02-27 19:39:29                                                
 
 ================================================================================*/
 
@@ -27,7 +27,7 @@ static inline uint32_t mul10(uint32_t n);
 
 #endif
 
-CONSTRUCTOR void fh_deserializer_init(void)
+CONSTRUCTOR void http_deserializer_init(void)
 {
 #ifdef __AVX512F__
 
@@ -42,12 +42,12 @@ CONSTRUCTOR void fh_deserializer_init(void)
 #endif
 }
 
-uint16_t fh_deserialize(const char *buffer, const uint16_t buffer_size, fh_message_t *message)
+uint16_t http1_deserialize(const char *buffer, const uint16_t buffer_size, http_message_t *message)
 {
   //TODO
 }
 
-bool fh_is_complete(const char *buffer, const uint16_t len)
+bool http1_is_complete(const char *buffer, const uint16_t len)
 {
   //TODO
 }
