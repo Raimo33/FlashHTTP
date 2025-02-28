@@ -5,7 +5,7 @@ Creator: Claudio Raimondi
 Email: claudio.raimondi@pm.me                                                   
 
 created at: 2025-02-11 12:37:26                                                 
-last edited: 2025-02-28 19:02:45                                                
+last edited: 2025-02-28 19:34:18                                                
 
 ================================================================================*/
 
@@ -70,33 +70,6 @@ uint16_t http1_deserialize(char *restrict buffer, const uint16_t buffer_size, ht
   response->body = buffer;
 
   return buffer - buffer_start;
-}
-
-bool http1_is_complete(const char *const restrict buffer, const uint16_t len)
-{
-  const char *const headers_end = memmem(buffer, len, "\r\n\r\n", STR_LEN("\r\n\r\n"));
-  const uint16_t headers_size = headers_end - buffer;
-
-  if (!headers_end)
-    return false;
-
-  //TODO case insensitive
-  const char *const transfer_encoding_str = memmem(buffer, len, "Transfer-Encoding:", STR_LEN("Transfer-Encoding:"));
-  if (transfer_encoding_str)
-  {
-    const bool chunked = memmem(transfer_encoding_str, buffer + len - transfer_encoding_str, "chunked", STR_LEN("chunked"));
-    if (chunked)
-      return !!memmem(headers_end, len - headers_size, "0\r\n\r\n", STR_LEN("0\r\n\r\n"));
-  }
-
-  //TODO case insensitive
-  const char *const content_length_str = memmem(buffer, len, "Content-Length:", STR_LEN("Content-Length:"));
-  if (content_length_str)
-  {
-    const uint16_t content_length = atoui(content_length_str + STR_LEN("Content-Length:"), NULL);
-    return (headers_size + STR_LEN("\r\n\r\n") + content_length) <= len;
-  }
-  return true;
 }
 
 static uint16_t deserialize_status_code(const char *restrict buffer, uint16_t *const restrict status_code)
@@ -189,10 +162,9 @@ static uint32_t atoui(const char *str, const char **const endptr)
 {
   uint32_t result = 0;
   
-  while (UNLIKELY(*str == ' '))
-    str++;
+  str += strspn(str, " ");
 
-  while (LIKELY(*str >= '0' && *str <= '9'))
+  while (LIKELY(*str >= '0' && *str <= '9')) //TODO bit trick
   {
     result = mul10(result) + (*str - '0');
     str++;

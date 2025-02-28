@@ -5,7 +5,7 @@ Creator: Claudio Raimondi
 Email: claudio.raimondi@pm.me                                                   
 
 created at: 2025-02-13 13:38:07                                                 
-last edited: 2025-02-28 19:02:45                                                
+last edited: 2025-02-28 19:34:18                                                
 
 ================================================================================*/
 
@@ -38,7 +38,7 @@ typedef struct
 {
   http_method_t method;
   const char *path;
-  uint8_t path_len;
+  uint16_t path_len;
   http_version_t version;
   const http_header_t *headers;
   uint16_t headers_count;

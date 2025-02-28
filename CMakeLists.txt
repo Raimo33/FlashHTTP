@@ -30,9 +30,6 @@ set(FLASHTTP_COMPILE_OPTIONS
   -fno-semantic-interposition -fno-stack-protector -fno-plt 
   -fno-asynchronous-unwind-tables -funroll-loops -fomit-frame-pointer
 )
-if(DEFINED FIX_MAX_FIELDS)
-  list(APPEND FLASHTTP_COMPILE_OPTIONS -DHTTP_MAX_HEADERS=${HTTP_MAX_HEADERS})
-endif()
 
 add_library(flashttp_shared SHARED ${FLASHTTP_SOURCES})
 set_target_properties(flashttp_shared PROPERTIES

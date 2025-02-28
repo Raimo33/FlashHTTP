@@ -5,7 +5,7 @@ Creator: Claudio Raimondi
 Email: claudio.raimondi@pm.me                                                   
 
 created at: 2025-02-11 12:37:26                                                 
-last edited: 2025-02-28 19:02:45                                                
+last edited: 2025-02-28 19:34:18                                                
 
 ================================================================================*/
 
@@ -30,9 +30,9 @@ CONSTRUCTOR void http_serializer_init(void)
 }
 
 inline static uint8_t serialize_method(char *restrict buffer, const http_method_t method);
-static uint16_t serialize_path(char *restrict buffer, const char *restrict path, const uint8_t path_len);
+static uint16_t serialize_path(char *restrict buffer, const char *restrict path, const uint16_t path_len);
 inline static uint8_t serialize_version(char *restrict buffer, const http_version_t version);
-static uint32_t serialize_headers(char *restrict buffer, const http_header_t *restrict headers, const uint8_t headers_count);
+static uint32_t serialize_headers(char *restrict buffer, const http_header_t *restrict headers, const uint16_t headers_count);
 static uint32_t serialize_body(char *restrict buffer, const char *restrict body, const uint16_t body_len);
 
 constexpr char methods_str[][sizeof(uint64_t)] ALIGNED(64) = {
@@ -100,7 +100,7 @@ static inline uint8_t serialize_method(char *restrict buffer, const http_method_
   return buffer - buffer_start;
 }
 
-static uint16_t serialize_path(char *restrict buffer, const char *restrict path, const uint8_t path_len)
+static uint16_t serialize_path(char *restrict buffer, const char *restrict path, const uint16_t path_len)
 {
   const char *const buffer_start = buffer;
 
@@ -123,11 +123,11 @@ static inline uint8_t serialize_version(char *restrict buffer, const http_versio
   return buffer - buffer_start;
 }
 
-static uint32_t serialize_headers(char *restrict buffer, const http_header_t *restrict headers, const uint8_t headers_count)
+static uint32_t serialize_headers(char *restrict buffer, const http_header_t *restrict headers, const uint16_t headers_count)
 {
   const char *const buffer_start = buffer;
 
-  for (uint8_t i = 0; LIKELY(i < headers_count); i++)
+  for (uint16_t i = 0; LIKELY(i < headers_count); i++)
   {
     const http_header_t *header = &headers[i];
 
