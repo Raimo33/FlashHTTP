@@ -5,7 +5,7 @@ Creator: Claudio Raimondi
 Email: claudio.raimondi@pm.me                                                   
 
 created at: 2025-02-11 12:37:26                                                 
-last edited: 2025-02-27 19:39:29                                                
+last edited: 2025-02-28 19:02:45                                                
 
 ================================================================================*/
 
@@ -35,7 +35,7 @@ inline static uint8_t serialize_version(char *restrict buffer, const http_versio
 static uint32_t serialize_headers(char *restrict buffer, const http_header_t *restrict headers, const uint8_t headers_count);
 static uint32_t serialize_body(char *restrict buffer, const char *restrict body, const uint16_t body_len);
 
-static const char methods_str[][sizeof(uint64_t)] ALIGNED(64) = {
+constexpr char methods_str[][sizeof(uint64_t)] ALIGNED(64) = {
   [GET] = "GET",
   [HEAD] = "HEAD",
   [POST] = "POST",
@@ -47,7 +47,7 @@ static const char methods_str[][sizeof(uint64_t)] ALIGNED(64) = {
   [PATCH] = "PATCH",
   [CONNECT] = "CONNECT"
 };
-static const uint8_t methods_len[] = {
+constexpr uint8_t methods_len[] = {
   [GET] = STR_LEN("GET"),
   [HEAD] = STR_LEN("HEAD"),
   [POST] = STR_LEN("POST"),
@@ -60,25 +60,25 @@ static const uint8_t methods_len[] = {
   [CONNECT] = STR_LEN("CONNECT")
 };
 
-static const char versions_str[][sizeof(uint64_t)] ALIGNED(64) = {
+constexpr char versions_str[][sizeof(uint64_t)] ALIGNED(64) = {
   [HTTP_1_0] = "HTTP/1.0",
   [HTTP_1_1] = "HTTP/1.1",
   [HTTP_2_0] = "HTTP/2.0",
   [HTTP_3_0] = "HTTP/3.0"
 };
-static const uint8_t versions_len[] = {
+constexpr uint8_t versions_len[] = {
   [HTTP_1_0] = STR_LEN("HTTP/1.0"),
   [HTTP_1_1] = STR_LEN("HTTP/1.1"),
   [HTTP_2_0] = STR_LEN("HTTP/2.0"),
   [HTTP_3_0] = STR_LEN("HTTP/3.0")
 };
 
-static const char clrf[sizeof(uint16_t)] = "\r\n";
-static const char colon_space[sizeof(uint16_t)] = ": ";
+constexpr char clrf[sizeof(uint16_t)] = "\r\n";
+constexpr char colon_space[sizeof(uint16_t)] = ": ";
 
 uint32_t http1_serialize(const http_request_t *restrict request, char *restrict buffer)
 {
-  const char *buffer_start = buffer;
+  const char *const buffer_start = buffer;
 
   buffer += serialize_method(buffer, request->method);
   buffer += serialize_path(buffer, request->path, request->path_len);
@@ -91,7 +91,7 @@ uint32_t http1_serialize(const http_request_t *restrict request, char *restrict 
 
 static inline uint8_t serialize_method(char *restrict buffer, const http_method_t method)
 {
-  const char *buffer_start = buffer;
+  const char *const buffer_start = buffer;
 
   *(uint64_t *)buffer = *(uint64_t *)methods[method];
   buffer += methods_len[method];
@@ -102,7 +102,7 @@ static inline uint8_t serialize_method(char *restrict buffer, const http_method_
 
 static uint16_t serialize_path(char *restrict buffer, const char *restrict path, const uint8_t path_len)
 {
-  const char *buffer_start = buffer;
+  const char *const buffer_start = buffer;
 
   memcpy(buffer, path, path_len);
   buffer += path_len;
@@ -113,7 +113,7 @@ static uint16_t serialize_path(char *restrict buffer, const char *restrict path,
 
 static inline uint8_t serialize_version(char *restrict buffer, const http_version_t version)
 {
-  const char *buffer_start = buffer;
+  const char *const buffer_start = buffer;
 
   *(uint64_t *)buffer = *(uint64_t *)versions_str[version];
   buffer += versions_len[version];
@@ -125,7 +125,7 @@ static inline uint8_t serialize_version(char *restrict buffer, const http_versio
 
 static uint32_t serialize_headers(char *restrict buffer, const http_header_t *restrict headers, const uint8_t headers_count)
 {
-  const char *buffer_start = buffer;
+  const char *const buffer_start = buffer;
 
   for (uint8_t i = 0; LIKELY(i < headers_count); i++)
   {
@@ -150,7 +150,7 @@ static uint32_t serialize_headers(char *restrict buffer, const http_header_t *re
 
 static uint32_t serialize_body(char *restrict buffer, const char *restrict body, const uint16_t body_len)
 {
-  const char *buffer_start = buffer;
+  const char *const buffer_start = buffer;
 
   memcpy(buffer, body, body_len);
   buffer += body_len;
