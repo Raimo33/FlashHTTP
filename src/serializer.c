@@ -5,9 +5,14 @@ Creator: Claudio Raimondi
 Email: claudio.raimondi@pm.me                                                   
 
 created at: 2025-02-11 12:37:26                                                 
-last edited: 2025-02-28 19:34:18                                                
+last edited: 2025-02-28 21:21:24                                                
 
 ================================================================================*/
+
+#include <stdlib.h>
+#include <string.h>
+#include <sys/uio.h>
+#include <unistd.h>
 
 #include "common.h"
 #include "serializer.h"
@@ -29,11 +34,16 @@ CONSTRUCTOR void http_serializer_init(void)
   //TODO initialize constants
 }
 
-inline static uint8_t serialize_method(char *restrict buffer, const http_method_t method);
-static uint16_t serialize_path(char *restrict buffer, const char *restrict path, const uint16_t path_len);
-inline static uint8_t serialize_version(char *restrict buffer, const http_version_t version);
-static uint32_t serialize_headers(char *restrict buffer, const http_header_t *restrict headers, const uint16_t headers_count);
-static uint32_t serialize_body(char *restrict buffer, const char *restrict body, const uint16_t body_len);
+static inline uint8_t serialize_method(char *restrict buffer, const http_method_t method);
+static inline uint8_t vectorize_method(struct iovec *restrict iov, const http_method_t method);
+static inline uint16_t serialize_path(char *restrict buffer, const char *restrict path, const uint16_t path_len);
+static inline uint8_t vectorize_path(struct iovec *restrict iov, const char *restrict path, const uint16_t path_len);
+static inline uint8_t serialize_version(char *restrict buffer, const http_version_t version);
+static inline uint8_t vectorize_version(struct iovec *restrict iov, const http_version_t version);
+static uint16_t serialize_headers(char *restrict buffer, const http_header_t *restrict headers, const uint16_t headers_count);
+static uint16_t vectorize_headers(struct iovec *restrict iov, const http_header_t *restrict headers, const uint16_t headers_count);
+static inline uint32_t serialize_body(char *restrict buffer, const char *restrict body, const uint32_t body_len);
+static inline uint8_t vectorize_body(struct iovec *restrict iov, const char *restrict body, const uint32_t body_len);
 
 constexpr char methods_str[][sizeof(uint64_t)] ALIGNED(64) = {
   [GET] = "GET",
@@ -89,6 +99,36 @@ uint32_t http1_serialize(const http_request_t *restrict request, char *restrict 
   return buffer - buffer_start;
 }
 
+int32_t http1_serialize_write(const int fd, const http_request_t *restrict request)
+{
+  const uint16_t headers_count = request->headers_count;
+  const uint16_t iovcnt = 5 + (headers_count << 2) + 1 + 1;
+  
+  struct iovec iov_static[IOV_SIZE] ALIGNED(64);
+  struct iovec *iov = iov_static;
+
+  if (UNLIKELY(iovcnt > IOV_SIZE))
+  {
+    iov = malloc(iovcnt * sizeof(struct iovec));
+    if (UNLIKELY(iov == NULL))
+      return -1;
+  }
+
+  uint16_t i = 0;
+
+  i += vectorize_method(&iov[i], request->method);
+  i += vectorize_path(&iov[i], request->path, request->path_len);
+  i += vectorize_version(&iov[i], request->version);
+  i += vectorize_headers(&iov[i], request->headers, headers_count);
+  i += vectorize_body(&iov[i], request->body, request->body_len);
+
+  const int32_t result = writev(fd, iov, iovcnt);
+
+  free((void *)((uintptr_t)iov & -(iov != iov_static)));
+
+  return result;
+}
+
 static inline uint8_t serialize_method(char *restrict buffer, const http_method_t method)
 {
   const char *const buffer_start = buffer;
@@ -100,7 +140,14 @@ static inline uint8_t serialize_method(char *restrict buffer, const http_method_
   return buffer - buffer_start;
 }
 
-static uint16_t serialize_path(char *restrict buffer, const char *restrict path, const uint16_t path_len)
+static inline uint8_t vectorize_method(struct iovec *restrict iov, const http_method_t method)
+{
+  *iov = (struct iovec){methods_str[method], methods_len[method]}; 
+
+  return 1;
+}
+
+static inline uint16_t serialize_path(char *restrict buffer, const char *restrict path, const uint16_t path_len)
 {
   const char *const buffer_start = buffer;
 
@@ -109,6 +156,13 @@ static uint16_t serialize_path(char *restrict buffer, const char *restrict path,
   *buffer++ = ' ';
   
   return buffer - buffer_start;
+}
+
+static inline uint8_t vectorize_path(struct iovec *restrict iov, const char *restrict path, const uint16_t path_len)
+{
+  *iov = (struct iovec){path, path_len};
+
+  return 1;
 }
 
 static inline uint8_t serialize_version(char *restrict buffer, const http_version_t version)
@@ -123,7 +177,14 @@ static inline uint8_t serialize_version(char *restrict buffer, const http_versio
   return buffer - buffer_start;
 }
 
-static uint32_t serialize_headers(char *restrict buffer, const http_header_t *restrict headers, const uint16_t headers_count)
+static inline uint8_t vectorize_version(struct iovec *restrict iov, const http_version_t version)
+{
+  *iov = (struct iovec){versions_str[version], versions_len[version]};
+
+  return 1;
+}
+
+static uint16_t serialize_headers(char *restrict buffer, const http_header_t *restrict headers, const uint16_t headers_count)
 {
   const char *const buffer_start = buffer;
 
@@ -148,7 +209,26 @@ static uint32_t serialize_headers(char *restrict buffer, const http_header_t *re
   return buffer - buffer_start;
 }
 
-static uint32_t serialize_body(char *restrict buffer, const char *restrict body, const uint16_t body_len)
+static uint16_t vectorize_headers(struct iovec *restrict iov, const http_header_t *restrict headers, const uint16_t headers_count)
+{
+  const struct iovec *const iov_start = iov;
+
+  for (uint16_t i = 0; LIKELY(i < headers_count); i++)
+  {
+    const http_header_t *header = &headers[i];
+
+    *iov++ = (struct iovec){header->key, header->key_len};
+    *iov++ = (struct iovec){colon_space, sizeof(colon_space)};
+    *iov++ = (struct iovec){header->value, header->value_len};
+    *iov++ = (struct iovec){clrf, sizeof(clrf)};
+  }
+
+  *iov++ = (struct iovec){clrf, sizeof(clrf)};
+
+  return iov - iov_start;
+}
+
+static inline uint32_t serialize_body(char *restrict buffer, const char *restrict body, const uint32_t body_len)
 {
   const char *const buffer_start = buffer;
 
@@ -156,4 +236,11 @@ static uint32_t serialize_body(char *restrict buffer, const char *restrict body,
   buffer += body_len;
   
   return buffer - buffer_start;
+}
+
+static inline uint8_t vectorize_body(struct iovec *restrict iov, const char *restrict body, const uint32_t body_len)
+{
+  *iov = (struct iovec){body, body_len};
+
+  return 1;
 }

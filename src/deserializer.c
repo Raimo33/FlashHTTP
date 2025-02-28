@@ -5,7 +5,7 @@ Creator: Claudio Raimondi
 Email: claudio.raimondi@pm.me                                                   
 
 created at: 2025-02-11 12:37:26                                                 
-last edited: 2025-02-28 19:34:18                                                
+last edited: 2025-02-28 21:21:24                                                
 
 ================================================================================*/
 
@@ -59,7 +59,7 @@ CONSTRUCTOR void http_deserializer_init(void)
 #endif
 }
 
-uint16_t http1_deserialize(char *restrict buffer, const uint16_t buffer_size, http_response_t *const restrict response)
+uint16_t http1_deserialize(char *restrict buffer, const uint32_t buffer_size, http_response_t *const restrict response)
 {
   const char *const buffer_start = buffer;
 
@@ -164,7 +164,7 @@ static uint32_t atoui(const char *str, const char **const endptr)
   
   str += strspn(str, " ");
 
-  while (LIKELY(*str >= '0' && *str <= '9')) //TODO bit trick
+  while (LIKELY((uint8_t)*str - '0' < 10))
   {
     result = mul10(result) + (*str - '0');
     str++;

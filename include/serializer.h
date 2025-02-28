@@ -5,7 +5,7 @@ Creator: Claudio Raimondi
 Email: claudio.raimondi@pm.me                                                   
 
 created at: 2025-02-11 12:37:26                                                 
-last edited: 2025-02-27 19:39:29                                                
+last edited: 2025-02-28 21:21:24                                                
 
 ================================================================================*/
 
@@ -16,7 +16,11 @@ last edited: 2025-02-27 19:39:29
 
 # include "structs.h"
 
-uint16_t http1_serialize(char *restrict buffer, const http_request_t *restrict request);
+# define AVG_HEADER_COUNT 8
+# define IOV_SIZE (5 + (AVG_HEADER_COUNT << 3) + 1 + 1)
+
+uint32_t http1_serialize(char *restrict buffer, const http_request_t *restrict request);
+uint32_t http1_serialize_write(const int fd, const http_request_t *restrict request);
 //TODO support for http2 and http3
 //TODO direct zero-copy write with writev
 

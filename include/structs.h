@@ -5,7 +5,7 @@ Creator: Claudio Raimondi
 Email: claudio.raimondi@pm.me                                                   
 
 created at: 2025-02-13 13:38:07                                                 
-last edited: 2025-02-28 19:34:18                                                
+last edited: 2025-02-28 21:21:24                                                
 
 ================================================================================*/
 
@@ -43,7 +43,7 @@ typedef struct
   const http_header_t *headers;
   uint16_t headers_count;
   const char *body;
-  uint16_t body_len;
+  uint32_t body_len;
 } http_request_t;
 
 typedef struct

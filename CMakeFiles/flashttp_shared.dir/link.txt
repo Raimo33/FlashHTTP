@@ -1,0 +1,1 @@
+/usr/bin/gcc -fPIC -shared -Wl,-soname,libflashttp.so.1 -o libflashttp.so.1.0.0 CMakeFiles/flashttp_shared.dir/src/deserializer.c.o CMakeFiles/flashttp_shared.dir/src/serializer.c.o CMakeFiles/flashttp_shared.dir/src/common.c.o 
