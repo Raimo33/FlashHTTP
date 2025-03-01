@@ -119,13 +119,13 @@ CMAKE_PROJECT_HOMEPAGE_URL:STATIC=
 CMAKE_PROJECT_NAME:STATIC=flashttp
 
 //Value Computed by CMake
-CMAKE_PROJECT_VERSION:STATIC=1.2.0
+CMAKE_PROJECT_VERSION:STATIC=1.0.0
 
 //Value Computed by CMake
 CMAKE_PROJECT_VERSION_MAJOR:STATIC=1
 
 //Value Computed by CMake
-CMAKE_PROJECT_VERSION_MINOR:STATIC=2
+CMAKE_PROJECT_VERSION_MINOR:STATIC=0
 
 //Value Computed by CMake
 CMAKE_PROJECT_VERSION_PATCH:STATIC=0
@@ -195,6 +195,9 @@ CMAKE_STRIP:FILEPATH=/usr/bin/strip
 // Studio IDE projects all commands are done without /nologo.
 CMAKE_VERBOSE_MAKEFILE:BOOL=FALSE
 
+//Path to a library.
+XXHASH_LIBRARY:FILEPATH=/usr/local/lib/libxxhash.so
+
 //Value Computed by CMake
 flashttp_BINARY_DIR:STATIC=/home/claudio/Desktop/FlasHTTP
 
@@ -203,6 +206,12 @@ flashttp_IS_TOP_LEVEL:STATIC=ON
 
 //Value Computed by CMake
 flashttp_SOURCE_DIR:STATIC=/home/claudio/Desktop/FlasHTTP
+
+//Dependencies for the target
+flashttp_shared_LIB_DEPENDS:STATIC=general;xxhash;
+
+//Dependencies for the target
+flashttp_static_LIB_DEPENDS:STATIC=general;xxhash;
 
 
 ########################

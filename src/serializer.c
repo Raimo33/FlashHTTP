@@ -5,7 +5,7 @@ Creator: Claudio Raimondi
 Email: claudio.raimondi@pm.me                                                   
 
 created at: 2025-02-11 12:37:26                                                 
-last edited: 2025-02-28 21:21:24                                                
+last edited: 2025-03-01 11:56:46                                                
 
 ================================================================================*/
 
@@ -51,7 +51,6 @@ constexpr char methods_str[][sizeof(uint64_t)] ALIGNED(64) = {
   [POST] = "POST",
   [PUT] = "PUT",
   [DELETE] = "DELETE",
-  [CONNECT] = "CONNECT",
   [OPTIONS] = "OPTIONS",
   [TRACE] = "TRACE",
   [PATCH] = "PATCH",
@@ -63,7 +62,6 @@ constexpr uint8_t methods_len[] = {
   [POST] = STR_LEN("POST"),
   [PUT] = STR_LEN("PUT"),
   [DELETE] = STR_LEN("DELETE"),
-  [CONNECT] = STR_LEN("CONNECT"),
   [OPTIONS] = STR_LEN("OPTIONS"),
   [TRACE] = STR_LEN("TRACE"),
   [PATCH] = STR_LEN("PATCH"),
@@ -86,7 +84,7 @@ constexpr uint8_t versions_len[] = {
 constexpr char clrf[sizeof(uint16_t)] = "\r\n";
 constexpr char colon_space[sizeof(uint16_t)] = ": ";
 
-uint32_t http1_serialize(const http_request_t *restrict request, char *restrict buffer)
+uint32_t http1_serialize(char *restrict buffer, const http_request_t *restrict request)
 {
   const char *const buffer_start = buffer;
 
@@ -133,7 +131,7 @@ static inline uint8_t serialize_method(char *restrict buffer, const http_method_
 {
   const char *const buffer_start = buffer;
 
-  *(uint64_t *)buffer = *(uint64_t *)methods[method];
+  *(uint64_t *)buffer = *(uint64_t *)methods_str[method];
   buffer += methods_len[method];
   *buffer++ = ' ';
   

@@ -3,9 +3,7 @@
 
 CMakeFiles/flashttp_shared.dir/src/deserializer.c.o: src/deserializer.c \
   /usr/include/stdc-predef.h \
-  src/common.h \
-  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/stdint.h \
-  /usr/include/stdint.h \
+  /usr/include/string.h \
   /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
   /usr/include/features.h \
   /usr/include/features-time64.h \
@@ -15,16 +13,23 @@ CMakeFiles/flashttp_shared.dir/src/deserializer.c.o: src/deserializer.c \
   /usr/include/x86_64-linux-gnu/bits/long-double.h \
   /usr/include/x86_64-linux-gnu/gnu/stubs.h \
   /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/stddef.h \
+  /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
+  /usr/include/strings.h \
+  /usr/local/include/xxhash.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/stdint.h \
+  /usr/include/stdint.h \
   /usr/include/x86_64-linux-gnu/bits/types.h \
   /usr/include/x86_64-linux-gnu/bits/typesizes.h \
   /usr/include/x86_64-linux-gnu/bits/time64.h \
   /usr/include/x86_64-linux-gnu/bits/wchar.h \
   /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
   /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
+  src/common.h \
   /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/immintrin.h \
   /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/x86gprintrin.h \
   /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/ia32intrin.h \
-  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/stddef.h \
   /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/adxintrin.h \
   /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/bmiintrin.h \
   /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/bmi2intrin.h \
@@ -156,6 +161,199 @@ CMakeFiles/flashttp_shared.dir/src/deserializer.c.o: src/deserializer.c \
   include/deserializer.h \
   include/structs.h
 
+CMakeFiles/flashttp_shared.dir/src/serializer.c.o: src/serializer.c \
+  /usr/include/stdc-predef.h \
+  /usr/include/stdlib.h \
+  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
+  /usr/include/features.h \
+  /usr/include/features-time64.h \
+  /usr/include/x86_64-linux-gnu/bits/wordsize.h \
+  /usr/include/x86_64-linux-gnu/bits/timesize.h \
+  /usr/include/x86_64-linux-gnu/sys/cdefs.h \
+  /usr/include/x86_64-linux-gnu/bits/long-double.h \
+  /usr/include/x86_64-linux-gnu/gnu/stubs.h \
+  /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/stddef.h \
+  /usr/include/x86_64-linux-gnu/bits/waitflags.h \
+  /usr/include/x86_64-linux-gnu/bits/waitstatus.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include-fixed/x86_64-linux-gnu/bits/floatn.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include-fixed/x86_64-linux-gnu/bits/floatn-common.h \
+  /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
+  /usr/include/x86_64-linux-gnu/sys/types.h \
+  /usr/include/x86_64-linux-gnu/bits/types.h \
+  /usr/include/x86_64-linux-gnu/bits/typesizes.h \
+  /usr/include/x86_64-linux-gnu/bits/time64.h \
+  /usr/include/x86_64-linux-gnu/bits/types/clock_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/clockid_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/time_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/timer_t.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
+  /usr/include/endian.h \
+  /usr/include/x86_64-linux-gnu/bits/endian.h \
+  /usr/include/x86_64-linux-gnu/bits/endianness.h \
+  /usr/include/x86_64-linux-gnu/bits/byteswap.h \
+  /usr/include/x86_64-linux-gnu/bits/uintn-identity.h \
+  /usr/include/x86_64-linux-gnu/sys/select.h \
+  /usr/include/x86_64-linux-gnu/bits/select.h \
+  /usr/include/x86_64-linux-gnu/bits/types/sigset_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__sigset_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_timeval.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h \
+  /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h \
+  /usr/include/x86_64-linux-gnu/bits/thread-shared-types.h \
+  /usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h \
+  /usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h \
+  /usr/include/x86_64-linux-gnu/bits/struct_mutex.h \
+  /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h \
+  /usr/include/alloca.h \
+  /usr/include/x86_64-linux-gnu/bits/stdlib-bsearch.h \
+  /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
+  /usr/include/string.h \
+  /usr/include/strings.h \
+  /usr/include/x86_64-linux-gnu/sys/uio.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_iovec.h \
+  /usr/include/x86_64-linux-gnu/bits/uio_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/uio-ext.h \
+  /usr/include/unistd.h \
+  /usr/include/x86_64-linux-gnu/bits/posix_opt.h \
+  /usr/include/x86_64-linux-gnu/bits/environments.h \
+  /usr/include/x86_64-linux-gnu/bits/confname.h \
+  /usr/include/x86_64-linux-gnu/bits/getopt_posix.h \
+  /usr/include/x86_64-linux-gnu/bits/getopt_core.h \
+  /usr/include/x86_64-linux-gnu/bits/unistd_ext.h \
+  /usr/include/linux/close_range.h \
+  src/common.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/stdint.h \
+  /usr/include/stdint.h \
+  /usr/include/x86_64-linux-gnu/bits/wchar.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/immintrin.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/x86gprintrin.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/ia32intrin.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/adxintrin.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/bmiintrin.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/bmi2intrin.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/cetintrin.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/cldemoteintrin.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/clflushoptintrin.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/clwbintrin.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/clzerointrin.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/cmpccxaddintrin.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/enqcmdintrin.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/fxsrintrin.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/lzcntintrin.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/lwpintrin.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/movdirintrin.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/mwaitintrin.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/mwaitxintrin.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/pconfigintrin.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/popcntintrin.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/pkuintrin.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/prfchiintrin.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/raointintrin.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/rdseedintrin.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/rtmintrin.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/serializeintrin.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/sgxintrin.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/tbmintrin.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/tsxldtrkintrin.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/uintrintrin.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/waitpkgintrin.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/wbnoinvdintrin.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/xsaveintrin.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/xsavecintrin.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/xsaveoptintrin.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/xsavesintrin.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/xtestintrin.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/hresetintrin.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/usermsrintrin.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/mmintrin.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/xmmintrin.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/mm_malloc.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/emmintrin.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/pmmintrin.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/tmmintrin.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/smmintrin.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/wmmintrin.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/avxintrin.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/avxvnniintrin.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/avxifmaintrin.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/avxvnniint8intrin.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/avxvnniint16intrin.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/avx2intrin.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/avx512fintrin.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/avx512erintrin.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/avx512pfintrin.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/avx512cdintrin.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/avx512vlintrin.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/avx512bwintrin.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/avx512dqintrin.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/avx512vlbwintrin.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/avx512vldqintrin.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/avx512ifmaintrin.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/avx512ifmavlintrin.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/avx512vbmiintrin.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/avx512vbmivlintrin.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/avx5124fmapsintrin.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/avx5124vnniwintrin.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/avx512vpopcntdqintrin.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/avx512vbmi2intrin.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/avx512vbmi2vlintrin.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/avx512vnniintrin.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/avx512vnnivlintrin.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/avx512vpopcntdqvlintrin.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/avx512bitalgintrin.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/avx512bitalgvlintrin.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/avx512vp2intersectintrin.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/avx512vp2intersectvlintrin.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/avx512fp16intrin.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/avx512fp16vlintrin.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/shaintrin.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/sm3intrin.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/sha512intrin.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/sm4intrin.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/fmaintrin.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/f16cintrin.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/gfniintrin.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/vaesintrin.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/vpclmulqdqintrin.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/avx512bf16vlintrin.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/avx512bf16intrin.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/avxneconvertintrin.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/amxtileintrin.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/amxint8intrin.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/amxbf16intrin.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/amxcomplexintrin.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/prfchwintrin.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/keylockerintrin.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/amxfp16intrin.h \
+  src/extensions.h \
+  include/serializer.h \
+  include/structs.h
+
+
+include/serializer.h:
+
+/usr/include/linux/close_range.h:
+
+/usr/include/x86_64-linux-gnu/bits/getopt_core.h:
+
+/usr/include/x86_64-linux-gnu/bits/confname.h:
+
+/usr/include/x86_64-linux-gnu/bits/environments.h:
+
+/usr/include/x86_64-linux-gnu/bits/posix_opt.h:
+
+/usr/include/x86_64-linux-gnu/bits/uio-ext.h:
+
+/usr/include/x86_64-linux-gnu/bits/uio_lim.h:
+
+/usr/include/x86_64-linux-gnu/bits/types/struct_iovec.h:
+
+/usr/include/x86_64-linux-gnu/sys/uio.h:
+
+src/serializer.c:
 
 include/structs.h:
 
@@ -164,8 +362,6 @@ include/deserializer.h:
 /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/keylockerintrin.h:
 
 /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/prfchwintrin.h:
-
-/usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/amxtileintrin.h:
 
 /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/amxint8intrin.h:
 
@@ -203,21 +399,17 @@ include/deserializer.h:
 
 /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/avx512bitalgvlintrin.h:
 
-/usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/xsavesintrin.h:
+/usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/avx512bitalgintrin.h:
 
-/usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/xsavecintrin.h:
-
-/usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/amxfp16intrin.h:
-
-/usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/xsaveoptintrin.h:
+/usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/avx512vnnivlintrin.h:
 
 /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/serializeintrin.h:
 
 /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/cetintrin.h:
 
-/usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/xsaveintrin.h:
+/usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/amxfp16intrin.h:
 
-src/common.h:
+/usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/xsaveoptintrin.h:
 
 /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/rtmintrin.h:
 
@@ -231,9 +423,9 @@ src/common.h:
 
 /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/avx512pfintrin.h:
 
-/usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/uintrintrin.h:
+/usr/include/x86_64-linux-gnu/bits/getopt_posix.h:
 
-/usr/include/x86_64-linux-gnu/bits/struct_rwlock.h:
+/usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/uintrintrin.h:
 
 /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/wmmintrin.h:
 
@@ -273,6 +465,16 @@ src/common.h:
 
 /usr/include/x86_64-linux-gnu/bits/wordsize.h:
 
+/usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/amxtileintrin.h:
+
+/usr/include/x86_64-linux-gnu/bits/types/locale_t.h:
+
+/usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/ia32intrin.h:
+
+/usr/include/x86_64-linux-gnu/bits/timesize.h:
+
+/usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include-fixed/x86_64-linux-gnu/bits/floatn.h:
+
 /usr/include/x86_64-linux-gnu/bits/libc-header-start.h:
 
 src/extensions.h:
@@ -283,6 +485,10 @@ src/extensions.h:
 
 /usr/include/stdc-predef.h:
 
+/usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/avx512vbmi2vlintrin.h:
+
+/usr/include/x86_64-linux-gnu/bits/stdlib-bsearch.h:
+
 /usr/include/features.h:
 
 /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/cldemoteintrin.h:
@@ -291,33 +497,25 @@ src/extensions.h:
 
 /usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h:
 
-/usr/include/x86_64-linux-gnu/bits/time64.h:
-
-/usr/include/x86_64-linux-gnu/bits/types/sigset_t.h:
-
 /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/avx512vbmi2intrin.h:
 
 /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/movdirintrin.h:
-
-/usr/include/x86_64-linux-gnu/bits/timesize.h:
-
-/usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/ia32intrin.h:
-
-/usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include-fixed/x86_64-linux-gnu/bits/floatn.h:
-
-/usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/avx512bitalgintrin.h:
 
 /usr/include/stdint.h:
 
 src/deserializer.c:
 
+/usr/local/include/xxhash.h:
+
 /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/tbmintrin.h:
 
-/usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/clwbintrin.h:
+/usr/include/x86_64-linux-gnu/bits/types/__locale_t.h:
 
-/usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/popcntintrin.h:
+/usr/include/x86_64-linux-gnu/bits/struct_rwlock.h:
 
-/usr/include/x86_64-linux-gnu/bits/typesizes.h:
+/usr/include/strings.h:
+
+/usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/stddef.h:
 
 /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/pconfigintrin.h:
 
@@ -327,11 +525,37 @@ src/deserializer.c:
 
 /usr/include/x86_64-linux-gnu/bits/stdint-intn.h:
 
+/usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/clwbintrin.h:
+
+/usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/popcntintrin.h:
+
+/usr/include/x86_64-linux-gnu/bits/typesizes.h:
+
 /usr/include/x86_64-linux-gnu/bits/wchar.h:
 
 /usr/include/x86_64-linux-gnu/gnu/stubs-64.h:
 
-/usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/stddef.h:
+/usr/include/x86_64-linux-gnu/gnu/stubs.h:
+
+/usr/include/x86_64-linux-gnu/bits/endian.h:
+
+/usr/include/x86_64-linux-gnu/bits/time64.h:
+
+/usr/include/x86_64-linux-gnu/bits/types/sigset_t.h:
+
+src/common.h:
+
+/usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/bmi2intrin.h:
+
+/usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/avx512vlintrin.h:
+
+/usr/include/x86_64-linux-gnu/bits/endianness.h:
+
+/usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/sgxintrin.h:
+
+/usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/bmiintrin.h:
+
+/usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/immintrin.h:
 
 /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/mwaitintrin.h:
 
@@ -345,17 +569,13 @@ src/deserializer.c:
 
 /usr/include/endian.h:
 
-/usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/bmi2intrin.h:
+/usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/xsaveintrin.h:
 
-/usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/avx512vlintrin.h:
+/usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/xsavecintrin.h:
 
-/usr/include/x86_64-linux-gnu/bits/endianness.h:
+/usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/xsavesintrin.h:
 
-/usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/immintrin.h:
-
-/usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/sgxintrin.h:
-
-/usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/bmiintrin.h:
+/usr/include/string.h:
 
 /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/hresetintrin.h:
 
@@ -366,6 +586,8 @@ src/deserializer.c:
 /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/mwaitxintrin.h:
 
 /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/mmintrin.h:
+
+/usr/include/x86_64-linux-gnu/bits/unistd_ext.h:
 
 /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/xmmintrin.h:
 
@@ -381,13 +603,11 @@ src/deserializer.c:
 
 /usr/include/x86_64-linux-gnu/bits/types/time_t.h:
 
-/usr/include/x86_64-linux-gnu/gnu/stubs.h:
-
-/usr/include/x86_64-linux-gnu/bits/endian.h:
-
 /usr/include/x86_64-linux-gnu/bits/stdlib-float.h:
 
 /usr/include/x86_64-linux-gnu/bits/uintn-identity.h:
+
+/usr/include/unistd.h:
 
 /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/gfniintrin.h:
 
@@ -396,6 +616,10 @@ src/deserializer.c:
 /usr/include/x86_64-linux-gnu/sys/select.h:
 
 /usr/include/x86_64-linux-gnu/bits/select.h:
+
+/usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/avx512vnniintrin.h:
+
+/usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h:
 
 /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h:
 
@@ -447,10 +671,6 @@ src/deserializer.c:
 
 /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/avx512vpopcntdqintrin.h:
 
-/usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h:
-
-/usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/avx512vnniintrin.h:
-
 /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/avx512dqintrin.h:
 
 /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/avx512vldqintrin.h:
@@ -458,9 +678,3 @@ src/deserializer.c:
 /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/avx512vbmivlintrin.h:
 
 /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/avx5124vnniwintrin.h:
-
-/usr/include/x86_64-linux-gnu/bits/stdlib-bsearch.h:
-
-/usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/avx512vbmi2vlintrin.h:
-
-/usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/avx512vnnivlintrin.h:

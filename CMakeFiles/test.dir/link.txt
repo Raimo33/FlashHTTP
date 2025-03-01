@@ -1,1 +1,1 @@
-/usr/bin/gcc CMakeFiles/test.dir/tests/test.c.o -o test  libflashttp.a 
+/usr/bin/gcc CMakeFiles/test.dir/tests/test.c.o -o test  libflashttp.a -lxxhash 

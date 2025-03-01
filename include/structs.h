@@ -5,7 +5,7 @@ Creator: Claudio Raimondi
 Email: claudio.raimondi@pm.me                                                   
 
 created at: 2025-02-13 13:38:07                                                 
-last edited: 2025-02-28 21:21:24                                                
+last edited: 2025-03-01 11:56:46                                                
 
 ================================================================================*/
 
@@ -18,7 +18,9 @@ typedef enum: uint8_t {GET, HEAD, POST, PUT, DELETE, OPTIONS, TRACE, PATCH, CONN
 typedef enum: uint8_t {HTTP_1_0, HTTP_1_1, HTTP_2_0, HTTP_3_0} http_version_t;
 
 //TODO alignment??
-//TODO const?
+
+#define HEADER_MAP_LOAD_FACTOR 5
+#define HEADER_MAP_CAPACITY(x) ((x) * HEADER_MAP_LOAD_FACTOR)
 
 typedef struct
 {
@@ -31,19 +33,19 @@ typedef struct
 typedef struct
 {
   http_header_t *entries;
-  uint16_t size;
+  const uint16_t size;
 } http_header_map_t;
 
 typedef struct
 {
   http_method_t method;
   const char *path;
-  uint16_t path_len;
+  const uint16_t path_len;
   http_version_t version;
   const http_header_t *headers;
-  uint16_t headers_count;
+  const uint16_t headers_count;
   const char *body;
-  uint32_t body_len;
+  const uint32_t body_len;
 } http_request_t;
 
 typedef struct
