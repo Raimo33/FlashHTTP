@@ -5,14 +5,12 @@ Creator: Claudio Raimondi
 Email: claudio.raimondi@pm.me                                                   
 
 created at: 2025-02-11 12:37:26                                                 
-last edited: 2025-03-01 11:56:46                                                
+last edited: 2025-03-01 17:39:45                                                
 
 ================================================================================*/
 
-#include <stdlib.h>
 #include <string.h>
 #include <sys/uio.h>
-#include <unistd.h>
 
 #include "common.h"
 #include "serializer.h"
@@ -99,32 +97,21 @@ uint32_t http1_serialize(char *restrict buffer, const http_request_t *restrict r
 
 int32_t http1_serialize_write(const int fd, const http_request_t *restrict request)
 {
+  if (UNLIKELY((8 + (request->headers_count << 4) + 1) > IOV_MAX))
+    return -1;
+ 
   const uint16_t headers_count = request->headers_count;
-  const uint16_t iovcnt = 5 + (headers_count << 2) + 1 + 1;
   
-  struct iovec iov_static[IOV_SIZE] ALIGNED(64);
-  struct iovec *iov = iov_static;
+  struct iovec iov[IOV_MAX] ALIGNED(64);
+  uint16_t iovcnt = 0;
 
-  if (UNLIKELY(iovcnt > IOV_SIZE))
-  {
-    iov = malloc(iovcnt * sizeof(struct iovec));
-    if (UNLIKELY(iov == NULL))
-      return -1;
-  }
+  iovcnt += vectorize_method(iov + iovcnt, request->method);
+  iovcnt += vectorize_path(iov + iovcnt, request->path, request->path_len);
+  iovcnt += vectorize_version(iov + iovcnt, request->version);
+  iovcnt += vectorize_headers(iov + iovcnt, request->headers, headers_count);
+  iovcnt += vectorize_body(iov + iovcnt, request->body, request->body_len);
 
-  uint16_t i = 0;
-
-  i += vectorize_method(&iov[i], request->method);
-  i += vectorize_path(&iov[i], request->path, request->path_len);
-  i += vectorize_version(&iov[i], request->version);
-  i += vectorize_headers(&iov[i], request->headers, headers_count);
-  i += vectorize_body(&iov[i], request->body, request->body_len);
-
-  const int32_t result = writev(fd, iov, iovcnt);
-
-  free((void *)((uintptr_t)iov & -(iov != iov_static)));
-
-  return result;
+  return writev(fd, iov, iovcnt);
 }
 
 static inline uint8_t serialize_method(char *restrict buffer, const http_method_t method)
@@ -140,9 +127,10 @@ static inline uint8_t serialize_method(char *restrict buffer, const http_method_
 
 static inline uint8_t vectorize_method(struct iovec *restrict iov, const http_method_t method)
 {
-  *iov = (struct iovec){methods_str[method], methods_len[method]}; 
+  *iov++ = (struct iovec){(char *)methods_str[method], methods_len[method]};
+  *iov = (struct iovec){" ", 1};
 
-  return 1;
+  return 2;
 }
 
 static inline uint16_t serialize_path(char *restrict buffer, const char *restrict path, const uint16_t path_len)
@@ -158,9 +146,10 @@ static inline uint16_t serialize_path(char *restrict buffer, const char *restric
 
 static inline uint8_t vectorize_path(struct iovec *restrict iov, const char *restrict path, const uint16_t path_len)
 {
-  *iov = (struct iovec){path, path_len};
+  *iov++ = (struct iovec){(char *)path, path_len};
+  *iov = (struct iovec){" ", 1};
 
-  return 1;
+  return 2;
 }
 
 static inline uint8_t serialize_version(char *restrict buffer, const http_version_t version)
@@ -177,9 +166,10 @@ static inline uint8_t serialize_version(char *restrict buffer, const http_versio
 
 static inline uint8_t vectorize_version(struct iovec *restrict iov, const http_version_t version)
 {
-  *iov = (struct iovec){versions_str[version], versions_len[version]};
+  *iov++ = (struct iovec){(char *)versions_str[version], versions_len[version]};
+  *iov = (struct iovec){(char *)clrf, sizeof(clrf)};
 
-  return 1;
+  return 2;
 }
 
 static uint16_t serialize_headers(char *restrict buffer, const http_header_t *restrict headers, const uint16_t headers_count)
@@ -215,13 +205,13 @@ static uint16_t vectorize_headers(struct iovec *restrict iov, const http_header_
   {
     const http_header_t *header = &headers[i];
 
-    *iov++ = (struct iovec){header->key, header->key_len};
-    *iov++ = (struct iovec){colon_space, sizeof(colon_space)};
-    *iov++ = (struct iovec){header->value, header->value_len};
-    *iov++ = (struct iovec){clrf, sizeof(clrf)};
+    *iov++ = (struct iovec){(char *)header->key, header->key_len};
+    *iov++ = (struct iovec){(char *)colon_space, sizeof(colon_space)};
+    *iov++ = (struct iovec){(char *)header->value, header->value_len};
+    *iov++ = (struct iovec){(char *)clrf, sizeof(clrf)};
   }
 
-  *iov++ = (struct iovec){clrf, sizeof(clrf)};
+  *iov++ = (struct iovec){(char *)clrf, sizeof(clrf)};
 
   return iov - iov_start;
 }
@@ -238,7 +228,7 @@ static inline uint32_t serialize_body(char *restrict buffer, const char *restric
 
 static inline uint8_t vectorize_body(struct iovec *restrict iov, const char *restrict body, const uint32_t body_len)
 {
-  *iov = (struct iovec){body, body_len};
+  *iov = (struct iovec){(char *)body, body_len};
 
   return 1;
 }
