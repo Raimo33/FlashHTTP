@@ -5,7 +5,7 @@ Creator: Claudio Raimondi
 Email: claudio.raimondi@pm.me                                                   
 
 created at: 2025-02-10 21:08:13                                                 
-last edited: 2025-03-02 18:23:58                                                
+last edited: 2025-03-02 19:14:36                                                
 
 ================================================================================*/
 
@@ -51,13 +51,28 @@ static bool compare_file(int fd, const char *expected_buffer, const uint32_t exp
   return true;
 }
 
+
+static void print_map(const http_header_map_t *map)
+{
+  for (uint16_t i = 0; i < map->size; i++)
+  {
+    if (map->entries[i].key != NULL)
+      printf("%s: %s\n", map->entries[i].key, map->entries[i].value);
+  }
+}
+
 static bool compare_response_headers(const http_header_map_t *response_headers, const http_header_t *expected_headers, const uint16_t headers_count)
 {
+  print_map(response_headers);
+
   for (uint16_t i = 0; i < headers_count; i++)
   {
     const char *header = header_map_get(response_headers, expected_headers[i].key, expected_headers[i].key_len);
     if (header == NULL)
+    {
+      printf("header %s not found\n", expected_headers[i].key);
       return false;
+    }
 
     if (memcmp(header, expected_headers[i].value, expected_headers[i].value_len) != 0)
       return false;
@@ -137,7 +152,7 @@ static char *test_serialize_normal_message(void)
     .path_len = 22,
     .version = HTTP_1_1,
     .headers = headers,
-    .headers_count = 12,
+    .headers_count = ARR_SIZE(headers),
     .body = body,
     .body_len = STR_LEN(body)
   };
@@ -196,16 +211,16 @@ static char *test_serialize_no_headers(void)
 
 static char *test_serialize_no_body(void)
 {
-  const http_header_t headers = {
-    .key = "Host", .value = "example.com", .key_len = 4, .value_len = 11
+  const http_header_t headers[] = {
+    { .key = "Host", .value = "example.com", .key_len = 4, .value_len = 11 }
   };
   const http_request_t request = {
     .method = GET,
     .path = "/example/path/resource",
     .path_len = 22,
     .version = HTTP_1_1,
-    .headers = &headers,
-    .headers_count = 1
+    .headers = headers,
+    .headers_count = ARR_SIZE(headers)
   };
   const char expected_buffer[] =
     "GET /example/path/resource HTTP/1.1\r\n"
@@ -267,7 +282,7 @@ static char *test_serialize_write_normal_message(void)
     .path_len = 22,
     .version = HTTP_1_1,
     .headers = headers,
-    .headers_count = 12,
+    .headers_count = ARR_SIZE(headers),
     .body = body,
     .body_len = STR_LEN(body)
   };
@@ -336,16 +351,16 @@ static char *test_serialize_write_no_headers(void)
 
 static char *test_serialize_write_no_body(void)
 {
-  const http_header_t headers = {
-    .key = "Host", .value = "example.com", .key_len = 4, .value_len = 11
+  const http_header_t headers[] = {
+    { .key = "Host", .value = "example.com", .key_len = 4, .value_len = 11 }
   };
   const http_request_t request = {
     .method = GET,
     .path = "/example/path/resource",
     .path_len = 22,
     .version = HTTP_1_1,
-    .headers = &headers,
-    .headers_count = 1
+    .headers = headers,
+    .headers_count = ARR_SIZE(headers)
   };
   const char expected_buffer[] =
     "GET /example/path/resource HTTP/1.1\r\n"
@@ -414,7 +429,7 @@ static char *test_serialize_write_too_many_headers(void)
     .path_len = 22,
     .version = HTTP_1_1,
     .headers = headers,
-    .headers_count = 12,
+    .headers_count = IOV_MAX,
     .body = body,
     .body_len = STR_LEN(body)
   };
@@ -424,7 +439,7 @@ static char *test_serialize_write_too_many_headers(void)
     return strerror(errno);
   int32_t len = http1_serialize_write(fds[1], &request);
 
-  mu_assert("error: serialize write normal message: wrong length", len == -1);
+  mu_assert("error: serialize write too many headers: wrong length", len == -1);
 
   close(fds[0]);
   close(fds[1]);

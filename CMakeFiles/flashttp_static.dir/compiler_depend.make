@@ -314,7 +314,18 @@ CMakeFiles/flashttp_static.dir/src/deserializer.c.o: src/deserializer.c \
   /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/amxfp16intrin.h \
   src/extensions.h \
   include/deserializer.h \
-  include/structs.h
+  include/structs.h \
+  /usr/include/stdio.h \
+  /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/stdarg.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__mbstate_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__fpos64_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/cookie_io_functions_t.h \
+  /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/stdio.h
 
 CMakeFiles/flashttp_static.dir/src/serializer.c.o: src/serializer.c \
   /usr/include/stdc-predef.h \
@@ -492,6 +503,16 @@ include/serializer.h:
 
 src/serializer.c:
 
+/usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h:
+
+/usr/include/x86_64-linux-gnu/bits/types/__FILE.h:
+
+/usr/include/x86_64-linux-gnu/bits/types/__fpos64_t.h:
+
+/usr/include/x86_64-linux-gnu/bits/types/__mbstate_t.h:
+
+/usr/include/stdio.h:
+
 include/structs.h:
 
 include/deserializer.h:
@@ -546,6 +567,8 @@ src/deserializer.c:
 
 /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/xsavecintrin.h:
 
+/usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h:
+
 /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/amxfp16intrin.h:
 
 /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/xsaveoptintrin.h:
@@ -559,6 +582,8 @@ src/deserializer.c:
 src/common.h:
 
 /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/rtmintrin.h:
+
+/usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/stdarg.h:
 
 /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/wbnoinvdintrin.h:
 
@@ -666,6 +691,8 @@ src/common.c:
 
 /usr/include/x86_64-linux-gnu/bits/stdint-intn.h:
 
+/usr/include/x86_64-linux-gnu/bits/types/cookie_io_functions_t.h:
+
 /usr/include/x86_64-linux-gnu/bits/wchar.h:
 
 /usr/include/x86_64-linux-gnu/gnu/stubs-64.h:
@@ -695,6 +722,8 @@ src/common.c:
 /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/sgxintrin.h:
 
 /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/bmiintrin.h:
+
+/usr/include/x86_64-linux-gnu/bits/stdio.h:
 
 /usr/include/string.h:
 
@@ -777,6 +806,10 @@ src/common.c:
 /usr/include/stdlib.h:
 
 /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/avxvnniint8intrin.h:
+
+/usr/include/x86_64-linux-gnu/bits/stdio_lim.h:
+
+/usr/include/x86_64-linux-gnu/bits/types/FILE.h:
 
 /usr/local/gcc-14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/include/avxvnniint16intrin.h:
 

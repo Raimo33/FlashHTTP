@@ -5,7 +5,7 @@ Creator: Claudio Raimondi
 Email: claudio.raimondi@pm.me                                                   
 
 created at: 2025-02-11 12:37:26                                                 
-last edited: 2025-03-02 18:23:58                                                
+last edited: 2025-03-02 19:14:36                                                
 
 ================================================================================*/
 
@@ -82,27 +82,25 @@ uint32_t http1_deserialize(char *restrict buffer, const uint32_t buffer_size, ht
   error_occured |= (headers_len == 0);
   buffer += headers_len;
 
-  response->body = buffer;  
+  response->body = buffer;
 
-  const uint32_t total_bytes = buffer - buffer_start;
-  return total_bytes & -(uint32_t)(!error_occured);
+  return (buffer - buffer_start) & -(uint32_t)(!error_occured);
 }
 
 static uint16_t deserialize_status_code(const char *buffer, const char *const buffer_end, http_response_t *const restrict response)
 {
   const char *const buffer_start = buffer;
   
-  buffer = memchr(buffer, ' ', buffer_end - buffer);
-
-  const uint16_t mask = -(buffer != NULL);
-  uint16_t status_code = mask & atoui(buffer, &buffer);
-  const uint16_t mask2 = -(status_code - 100 < 499);
-  status_code &= mask2;
-
+  const char *const space = memchr(buffer, ' ', buffer_end - buffer);
+  
+  const uint32_t status_code = atoui(space, &buffer);
   response->status_code = status_code;
   buffer++;
 
-  return (buffer - buffer_start) & mask2;
+  const bool invalid = (status_code - 100) > 600;
+  const bool overflow = (status_code > UINT16_MAX);
+
+  return (buffer - buffer_start) & -(uint16_t)(!invalid && !overflow);
 }
 
 static uint16_t deserialize_reason_phrase(char *buffer, UNUSED const char *const buffer_end, http_response_t *const restrict response)
@@ -114,15 +112,15 @@ static uint16_t deserialize_reason_phrase(char *buffer, UNUSED const char *const
 
   uint32_t reason_phrase_len = buffer - buffer_start;
 
-  const uint16_t mask = -(reason_phrase_len < UINT16_MAX);
-  reason_phrase_len &= mask;
-
   response->reason_phrase = buffer_start;
   response->reason_phrase_len = reason_phrase_len;
 
   buffer += STR_LEN("\r\n");
 
-  return reason_phrase_len;
+  const bool empty = (reason_phrase_len == 0);
+  const bool overflow = (reason_phrase_len > UINT16_MAX);
+
+  return (buffer - buffer_start) & -(uint16_t)(!empty && !overflow);
 }
 
 static uint16_t deserialize_headers(char *restrict buffer, const char *const buffer_end, http_response_t *const restrict response)
@@ -211,6 +209,9 @@ static uint32_t atoui(const char *str, const char **const endptr)
 {
   uint32_t result = 0;
 
+  if (UNLIKELY(!str))
+    return 0;
+
   str += strspn(str, " \t\n\r\v\f");
 
   while (LIKELY(((uint8_t)(*str - '0') < 10)))
@@ -231,8 +232,8 @@ static inline uint32_t mul10(uint32_t n)
 void strtolower(char *str, uint16_t len)
 {
   uint8_t unaligned_bytes = align_forward(str);
-  unaligned_bytes &= -(unaligned_bytes <= len);
-
+  unaligned_bytes -= (unaligned_bytes > len) & (unaligned_bytes - len);
+  
   while (UNLIKELY(unaligned_bytes--))
   {
     const char c = *str;
