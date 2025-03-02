@@ -5,7 +5,7 @@ Creator: Claudio Raimondi
 Email: claudio.raimondi@pm.me                                                   
 
 created at: 2025-02-11 14:56:11                                                 
-last edited: 2025-03-01 11:56:46                                                
+last edited: 2025-03-02 14:17:30                                                
 
 ================================================================================*/
 
@@ -18,7 +18,8 @@ last edited: 2025-03-01 11:56:46
 
 # include "extensions.h"
 
-# define STR_LEN(x) (sizeof(x) - 1)
+# define STR_LEN(x)   (sizeof(x) - 1)
+# define ARR_SIZE(x)  (sizeof(x) / sizeof(x[0]))
 
 # if defined(__AVX512F__)
   # define ALIGNMENT 64
@@ -30,9 +31,9 @@ last edited: 2025-03-01 11:56:46
   # define ALIGNMENT sizeof(void *)
 # endif
 
-INTERNAL ALWAYS_INLINE inline void *align_forward(const void *ptr)
+INTERNAL ALWAYS_INLINE inline uint8_t align_forward(const void *ptr)
 {
-  return (void *)(((uintptr_t)ptr + ALIGNMENT - 1) & -ALIGNMENT);
+  return -(uintptr_t)ptr & (ALIGNMENT - 1);
 }
 
 #endif

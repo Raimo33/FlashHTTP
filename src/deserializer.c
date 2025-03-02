@@ -5,7 +5,7 @@ Creator: Claudio Raimondi
 Email: claudio.raimondi@pm.me                                                   
 
 created at: 2025-02-11 12:37:26                                                 
-last edited: 2025-03-02 01:31:59                                                
+last edited: 2025-03-02 14:17:30                                                
 
 ================================================================================*/
 
@@ -84,6 +84,7 @@ static uint16_t deserialize_status_code(const char *buffer, http_response_t *con
   buffer = rawmemchr(buffer, ' ');
   const uint16_t status_code = atoui(buffer, &buffer);
   response->status_code = status_code;
+  buffer++;
 
   return ((uint16_t)(status_code - 100) < 499) * (buffer - buffer_start);
 }
@@ -93,9 +94,11 @@ static uint16_t deserialize_reason_phrase(char *buffer, http_response_t *const r
   const char *const buffer_start = buffer;
 
   buffer = rawmemchr(buffer, '\r');
-  response->reason_phrase = buffer;
-  response->reason_phrase_len = buffer - buffer_start;
   *buffer = '\0';
+
+  response->reason_phrase = buffer_start;
+  response->reason_phrase_len = buffer - buffer_start;
+
   buffer += STR_LEN("\r\n");
 
   return buffer - buffer_start;
@@ -114,14 +117,15 @@ static uint16_t deserialize_headers(char *restrict buffer, http_response_t *cons
     char *const key = buffer;
     buffer = rawmemchr(buffer, ':');
     const uint16_t key_len = buffer - key;
-    buffer++;
-    buffer += strspn(buffer, " ");
+    *buffer++ = '\0';
+    buffer += strspn(buffer, " \t");
 
     strtolower(key, key_len);
 
     const char *const value = buffer;
     buffer = rawmemchr(buffer, '\r');
     const uint16_t value_len = buffer - value;
+    *buffer = '\0';
     buffer += STR_LEN("\r\n");
 
     const http_header_t header = {
@@ -175,10 +179,10 @@ const char *header_map_get(const http_header_map_t *const restrict map, const ch
 static uint32_t atoui(const char *str, const char **const endptr)
 {
   uint32_t result = 0;
-  printf("str: %s\n", str);
-  str += strspn(str, " ");
 
-  while (LIKELY(((uint8_t)*str - '0') < 10))
+  str += strspn(str, " \t\n\r\v\f");
+
+  while (LIKELY(((uint8_t)(*str - '0') < 10)))
   {
     result = mul10(result) + (*str - '0');
     str++;
@@ -195,15 +199,14 @@ static inline uint32_t mul10(uint32_t n)
 
 void strtolower(char *str, uint16_t len)
 {
-  const char *const aligned_str = align_forward(str);
+  uint8_t unaligned_bytes = align_forward(str);
+  unaligned_bytes &= -(unaligned_bytes <= len);
 
-  while (UNLIKELY(str < aligned_str && len))
+  while (UNLIKELY(unaligned_bytes--))
   {
     const char c = *str;
-    *str = c | (0x20 & (c - 'A') >> 8);
-
+    *str++ = c | (((uint8_t)(c - 'A') <= ('Z' - 'A')) << 5);
     len--;
-    str++;
   }
 
 #ifdef __AVX512F__
@@ -258,7 +261,7 @@ void strtolower(char *str, uint16_t len)
   }
 #endif
 
-  constexpr uint64_t all_bytes = 0x0101010101010101;
+  constexpr uint64_t all_bytes = 0x0101010101010101ULL;
 
   while (LIKELY(len >= 8))
   {
@@ -275,12 +278,9 @@ void strtolower(char *str, uint16_t len)
     len -= 8;
   }
 
-  while (LIKELY(len))
+  while (LIKELY(len--))
   {
     const char c = *str;
-    *str = c | (0x20 & (c - 'A') >> 8);
-
-    len--;
-    str++;
+    *str++ = c | (((uint8_t)(c - 'A') <= ('Z' - 'A')) << 5);
   }
 }

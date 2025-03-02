@@ -5,7 +5,7 @@ Creator: Claudio Raimondi
 Email: claudio.raimondi@pm.me                                                   
 
 created at: 2025-02-10 21:08:13                                                 
-last edited: 2025-03-02 01:31:59                                                
+last edited: 2025-03-02 14:17:30                                                
 
 ================================================================================*/
 
@@ -16,6 +16,8 @@ last edited: 2025-03-02 01:31:59
 #include <unistd.h>
 #include <stdlib.h>
 #include <fcntl.h>
+
+#define ARR_SIZE(x) (sizeof(x) / sizeof(x[0]))
 
 #define mu_assert(message, test) do { if (!(test)) return message; } while (0)
 #define mu_run_test(test) do { char *message = test(); tests_run++; if (message) return message; } while (0)
@@ -232,10 +234,10 @@ static char *test_deserialize_normal_message(void)
     { .key = "content-type",    .value = "text/html; charset=UTF-8",      .key_len = 12,  .value_len = 24 },
     { .key = "content-length",  .value = "1234",                          .key_len = 14,  .value_len = 4 },
     { .key = "connection",      .value = "keep-alive",                    .key_len = 10,  .value_len = 10 },
-    { .key = "server",          .value = "Apache/2.4.41 (Unix)",          .key_len = 6,   .value_len = 22 },
-    { .key = "cache-control",   .value = "max-age=3600",                  .key_len = 13,  .value_len = 11 },
-    { .key = "etag",            .value = "\"abc123\"",                    .key_len = 4,   .value_len = 7 },
-    { .key = "date",            .value = "Mon, 01 Jan 2023 12:00:00 GMT", .key_len = 4,   .value_len = 30 }
+    { .key = "server",          .value = "Apache/2.4.41 (Unix)",          .key_len = 6,   .value_len = 20 },
+    { .key = "cache-control",   .value = "max-age=3600",                  .key_len = 13,  .value_len = 12 },
+    { .key = "etag",            .value = "\"abc123\"",                    .key_len = 4,   .value_len = 8 },
+    { .key = "date",            .value = "Mon, 01 Jan 2023 12:00:00 GMT", .key_len = 4,   .value_len = 29 }
   };
   const char expected_body[] =
     "<!DOCTYPE html>\n"
@@ -253,13 +255,10 @@ static char *test_deserialize_normal_message(void)
   http_response_t response = {
     .headers = {
       .entries = headers,
-      .size = HEADER_MAP_CAPACITY(7)
+      .size = ARR_SIZE(headers)
     }
   };
   const uint32_t len = http1_deserialize(buffer, sizeof(buffer), &response);
-
-  printf("status_code: %d\n", response.status_code);
-  printf("expected_status_code: %d\n", expected_status_code);
 
   mu_assert("error: deserialize normal message: wrong length", len == expected_len);
   mu_assert("error: deserialize normal message: wrong status code", response.status_code == expected_status_code);
