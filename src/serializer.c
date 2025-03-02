@@ -5,7 +5,7 @@ Creator: Claudio Raimondi
 Email: claudio.raimondi@pm.me                                                   
 
 created at: 2025-02-11 12:37:26                                                 
-last edited: 2025-03-01 17:39:45                                                
+last edited: 2025-03-02 01:31:59                                                
 
 ================================================================================*/
 
@@ -101,7 +101,7 @@ int32_t http1_serialize_write(const int fd, const http_request_t *restrict reque
     return -1;
  
   const uint16_t headers_count = request->headers_count;
-  
+
   struct iovec iov[IOV_MAX] ALIGNED(64);
   uint16_t iovcnt = 0;
 
@@ -121,7 +121,7 @@ static inline uint8_t serialize_method(char *restrict buffer, const http_method_
   *(uint64_t *)buffer = *(uint64_t *)methods_str[method];
   buffer += methods_len[method];
   *buffer++ = ' ';
-  
+
   return buffer - buffer_start;
 }
 
@@ -140,7 +140,7 @@ static inline uint16_t serialize_path(char *restrict buffer, const char *restric
   memcpy(buffer, path, path_len);
   buffer += path_len;
   *buffer++ = ' ';
-  
+
   return buffer - buffer_start;
 }
 
@@ -160,7 +160,7 @@ static inline uint8_t serialize_version(char *restrict buffer, const http_versio
   buffer += versions_len[version];
   *(uint16_t *)buffer = *(uint16_t *)clrf;
   buffer += sizeof(clrf);
-  
+
   return buffer - buffer_start;
 }
 
@@ -222,7 +222,7 @@ static inline uint32_t serialize_body(char *restrict buffer, const char *restric
 
   memcpy(buffer, body, body_len);
   buffer += body_len;
-  
+
   return buffer - buffer_start;
 }
 

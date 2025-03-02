@@ -5,7 +5,7 @@ Creator: Claudio Raimondi
 Email: claudio.raimondi@pm.me                                                   
 
 created at: 2025-02-11 12:37:26                                                 
-last edited: 2025-03-01 17:39:45                                                
+last edited: 2025-03-02 01:31:59                                                
 
 ================================================================================*/
 
@@ -15,10 +15,11 @@ last edited: 2025-03-01 17:39:45
 #include "common.h"
 #include "deserializer.h"
 
-static uint16_t deserialize_status_code(const char *buffer, uint16_t *const restrict status_code);
-static uint16_t deserialize_reason_phrase(char *buffer, const char **const reason_phrase, uint16_t *const restrict reason_phrase_len);
-static uint16_t deserialize_headers(char *restrict buffer, http_header_map_t *const restrict header_map, const uint16_t *restrict headers_count);
+static uint16_t deserialize_status_code(const char *buffer, http_response_t *const restrict response);
+static uint16_t deserialize_reason_phrase(char *buffer, http_response_t *const restrict response);
+static uint16_t deserialize_headers(char *restrict buffer, http_response_t *const restrict response);
 static void header_map_set(http_header_map_t *const restrict map, const http_header_t *const restrict header);
+static void strtolower(char *str, uint16_t len);
 static uint32_t atoui(const char *str, const char **const endptr);
 static inline uint32_t mul10(uint32_t n);
 
@@ -67,44 +68,46 @@ uint32_t http1_deserialize(char *restrict buffer, UNUSED const uint32_t buffer_s
 {
   const char *const buffer_start = buffer;
 
-  buffer += deserialize_status_code(buffer, &response->status_code);
-  buffer += deserialize_reason_phrase(buffer, &response->reason_phrase, &response->reason_phrase_len);
-  buffer += deserialize_headers(buffer, response->headers, &response->headers_count);
-  
+  buffer += deserialize_status_code(buffer, response);
+  buffer += deserialize_reason_phrase(buffer, response);
+  buffer += deserialize_headers(buffer, response);
+
   response->body = buffer;
 
   return buffer - buffer_start;
 }
 
-static uint16_t deserialize_status_code(const char *buffer, uint16_t *const restrict status_code)
+static uint16_t deserialize_status_code(const char *buffer, http_response_t *const restrict response)
 {
   const char *const buffer_start = buffer;
 
   buffer = rawmemchr(buffer, ' ');
-  *status_code = atoui(buffer, &buffer);
+  const uint16_t status_code = atoui(buffer, &buffer);
+  response->status_code = status_code;
 
-  return ((uint16_t)(*status_code - 100) < 499) * (buffer - buffer_start);
+  return ((uint16_t)(status_code - 100) < 499) * (buffer - buffer_start);
 }
 
-static uint16_t deserialize_reason_phrase(char *buffer, const char **const reason_phrase, uint16_t *const restrict reason_phrase_len)
+static uint16_t deserialize_reason_phrase(char *buffer, http_response_t *const restrict response)
 {
   const char *const buffer_start = buffer;
 
   buffer = rawmemchr(buffer, '\r');
-  *reason_phrase = buffer;
-  *reason_phrase_len = buffer - buffer_start;
+  response->reason_phrase = buffer;
+  response->reason_phrase_len = buffer - buffer_start;
   *buffer = '\0';
   buffer += STR_LEN("\r\n");
 
   return buffer - buffer_start;
 }
 
-static uint16_t deserialize_headers(char *restrict buffer, http_header_map_t *const restrict header_map, uint16_t *restrict headers_count)
+static uint16_t deserialize_headers(char *restrict buffer, http_response_t *const restrict response)
 {
   const char *const buffer_start = buffer;
 
-  const uint16_t header_map_size = header_map->size;
-  uint16_t i = 0;
+  const uint16_t header_map_size = response->headers.size;
+  http_header_map_t *const header_map = &response->headers;
+  uint16_t headers_count = 0;
 
   while (LIKELY(*buffer != '\r'))
   {
@@ -128,14 +131,14 @@ static uint16_t deserialize_headers(char *restrict buffer, http_header_map_t *co
       .value_len = value_len
     };
 
-    if (UNLIKELY(i++ == header_map_size))
+    if (UNLIKELY(headers_count++ == header_map_size))
       return 0;
 
     header_map_set(header_map, &header);
   }
 
   buffer += STR_LEN("\r\n");
-  *headers_count = i;
+  response->headers_count = headers_count;
 
   return buffer - buffer_start;
 }
@@ -156,7 +159,7 @@ const char *header_map_get(const http_header_map_t *const restrict map, const ch
 {
   const uint16_t map_size = map->size;
   const uint16_t original_idx = (uint16_t)(XXH3_64bits(key, key_len) % map_size);
-  
+
   uint16_t idx = original_idx;
   for (uint16_t i = 0; LIKELY(map->entries[idx].key != NULL); i++)
   {
@@ -172,7 +175,7 @@ const char *header_map_get(const http_header_map_t *const restrict map, const ch
 static uint32_t atoui(const char *str, const char **const endptr)
 {
   uint32_t result = 0;
-  
+  printf("str: %s\n", str);
   str += strspn(str, " ");
 
   while (LIKELY(((uint8_t)*str - '0') < 10))
@@ -230,7 +233,7 @@ void strtolower(char *str, uint16_t len)
     const __m256i add_mask = _mm256_and_si256(cmp_mask, _256_add_mask);
 
     chunk = _mm256_add_epi8(chunk, add_mask);
-  
+
     _mm256_stream_si256((__m256i *)str, chunk);
 
     str += 32;

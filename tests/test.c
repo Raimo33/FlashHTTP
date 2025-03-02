@@ -5,7 +5,7 @@ Creator: Claudio Raimondi
 Email: claudio.raimondi@pm.me                                                   
 
 created at: 2025-02-10 21:08:13                                                 
-last edited: 2025-03-01 17:39:45                                                
+last edited: 2025-03-02 01:31:59                                                
 
 ================================================================================*/
 
@@ -28,16 +28,16 @@ static bool compare_file(int fd, const char *expected_buffer, const uint32_t exp
   const uint32_t BUFFER_SIZE = 4096;
   char buffer[BUFFER_SIZE];
   uint32_t total_read = 0;
-  
+
   while (total_read < expected_len)
   {
     const uint32_t remaining = expected_len - total_read;
     const uint32_t chunk_size = (remaining > BUFFER_SIZE) ? BUFFER_SIZE : remaining;
-    
+
     const int32_t bytes_read = read(fd, buffer, chunk_size);
     if (bytes_read <= 0)
       return false;
-        
+
     if (memcmp(buffer, expected_buffer + total_read, bytes_read) != 0)
       return false;
 
@@ -47,14 +47,14 @@ static bool compare_file(int fd, const char *expected_buffer, const uint32_t exp
   return true;
 }
 
-static bool compare_response_headers(const http_header_t *response_headers, const http_header_t *expected_headers, const uint16_t headers_count)
+static bool compare_response_headers(const http_header_map_t *response_headers, const http_header_t *expected_headers, const uint16_t headers_count)
 {
   for (uint16_t i = 0; i < headers_count; i++)
   {
     const char *header = header_map_get(response_headers, expected_headers[i].key, expected_headers[i].key_len);
     if (header == NULL)
       return false;
-    
+
     if (memcmp(header, expected_headers[i].value, expected_headers[i].value_len) != 0)
       return false;
   }
@@ -86,7 +86,7 @@ static char *all_tests(void)
   mu_run_test(test_serialize_normal_message);
 
   mu_run_test(test_serialize_write_normal_message);
-  
+
   mu_run_test(test_deserialize_normal_message);
 
   return 0;
@@ -207,7 +207,7 @@ static char *test_serialize_write_normal_message(void)
 
 static char *test_deserialize_normal_message(void)
 {
-  const char buffer[] =
+  char buffer[] =
     "HTTP/1.1 200 OK\r\n"
     "Content-Type: text/html; charset=UTF-8\r\n"
     "Content-Length: 1234\r\n"
@@ -247,20 +247,25 @@ static char *test_deserialize_normal_message(void)
     "<h1>This is the body of the response</h1>\n"
     "</body>\n"
     "</html>";
+  const uint32_t expected_len = strlen(buffer) - strlen(expected_body);
 
+  http_header_t headers[HEADER_MAP_CAPACITY(7)] = {0};
   http_response_t response = {
     .headers = {
-      .entries = (http_header_t[HEADER_MAP_CAPACITY(7)]){0},
+      .entries = headers,
       .size = HEADER_MAP_CAPACITY(7)
     }
   };
   const uint32_t len = http1_deserialize(buffer, sizeof(buffer), &response);
 
-  mu_assert("error: deserialize normal message: wrong length", len == sizeof(buffer));
+  printf("status_code: %d\n", response.status_code);
+  printf("expected_status_code: %d\n", expected_status_code);
+
+  mu_assert("error: deserialize normal message: wrong length", len == expected_len);
   mu_assert("error: deserialize normal message: wrong status code", response.status_code == expected_status_code);
   mu_assert("error: deserialize normal message: wrong reason phrase", memcmp(response.reason_phrase, expected_reason_phrase, 2) == 0);
   mu_assert("error: deserialize normal message: wrong headers count", response.headers_count == 7);
-  mu_assert("error: deserialize normal message: wrong headers", compare_response_headers(response.headers, expected_headers, 7));
+  mu_assert("error: deserialize normal message: wrong headers", compare_response_headers(&response.headers, expected_headers, 7));
   mu_assert("error: deserialize normal message: wrong body", memcmp(response.body, expected_body, sizeof(expected_body)) == 0);
 
   return 0;
