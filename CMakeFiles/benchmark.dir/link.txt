@@ -1,1 +1,0 @@
-/usr/bin/gcc CMakeFiles/benchmark.dir/benchmarks/benchmark.c.o -o benchmark  libflashttp.a -lm -lxxhash 
