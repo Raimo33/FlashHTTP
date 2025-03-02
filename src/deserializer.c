@@ -5,7 +5,7 @@ Creator: Claudio Raimondi
 Email: claudio.raimondi@pm.me                                                   
 
 created at: 2025-02-11 12:37:26                                                 
-last edited: 2025-03-02 14:17:30                                                
+last edited: 2025-03-02 15:33:00                                                
 
 ================================================================================*/
 
@@ -86,7 +86,7 @@ static uint16_t deserialize_status_code(const char *buffer, http_response_t *con
   response->status_code = status_code;
   buffer++;
 
-  return ((uint16_t)(status_code - 100) < 499) * (buffer - buffer_start);
+  return ((uint16_t)(status_code - 100) < 499) * (buffer - buffer_start); //TODO fix, return from the main function
 }
 
 static uint16_t deserialize_reason_phrase(char *buffer, http_response_t *const restrict response)
@@ -136,7 +136,7 @@ static uint16_t deserialize_headers(char *restrict buffer, http_response_t *cons
     };
 
     if (UNLIKELY(headers_count++ == header_map_size))
-      return 0;
+      return 0; //TODO fix, return from the main function
 
     header_map_set(header_map, &header);
   }

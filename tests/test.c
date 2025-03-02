@@ -5,7 +5,7 @@ Creator: Claudio Raimondi
 Email: claudio.raimondi@pm.me                                                   
 
 created at: 2025-02-10 21:08:13                                                 
-last edited: 2025-03-02 14:17:30                                                
+last edited: 2025-03-02 15:33:00                                                
 
 ================================================================================*/
 
@@ -83,6 +83,7 @@ int main(void)
   return !!result;
 }
 
+//TODO other tests according to the documentation
 static char *all_tests(void)
 {
   mu_run_test(test_serialize_normal_message);
@@ -90,6 +91,7 @@ static char *all_tests(void)
   mu_run_test(test_serialize_write_normal_message);
 
   mu_run_test(test_deserialize_normal_message);
+  //TODO test duplacate header
 
   return 0;
 }

@@ -5,7 +5,7 @@ Creator: Claudio Raimondi
 Email: claudio.raimondi@pm.me                                                   
 
 created at: 2025-02-11 12:37:26                                                 
-last edited: 2025-03-02 01:31:59                                                
+last edited: 2025-03-02 15:33:00                                                
 
 ================================================================================*/
 
@@ -95,7 +95,7 @@ uint32_t http1_serialize(char *restrict buffer, const http_request_t *restrict r
   return buffer - buffer_start;
 }
 
-int32_t http1_serialize_write(const int fd, const http_request_t *restrict request)
+int32_t http1_serialize_write(const int fd, const http_request_t *restrict request) //TODO optimize, too many microwrites
 {
   if (UNLIKELY((8 + (request->headers_count << 4) + 1) > IOV_MAX))
     return -1;
@@ -201,7 +201,7 @@ static uint16_t vectorize_headers(struct iovec *restrict iov, const http_header_
 {
   const struct iovec *const iov_start = iov;
 
-  for (uint16_t i = 0; LIKELY(i < headers_count); i++)
+  for (uint16_t i = 0; LIKELY(i < headers_count); i++) //TODO headers can be NULL, check if UB
   {
     const http_header_t *header = &headers[i];
 
@@ -220,7 +220,7 @@ static inline uint32_t serialize_body(char *restrict buffer, const char *restric
 {
   const char *const buffer_start = buffer;
 
-  memcpy(buffer, body, body_len);
+  memcpy(buffer, body, body_len); //TODO body can be NULL, check if UB
   buffer += body_len;
 
   return buffer - buffer_start;
