@@ -5,7 +5,7 @@ Creator: Claudio Raimondi
 Email: claudio.raimondi@pm.me                                                   
 
 created at: 2025-02-11 12:37:26                                                 
-last edited: 2025-03-02 19:14:36                                                
+last edited: 2025-03-02 22:55:24                                                
 
 ================================================================================*/
 
@@ -71,15 +71,15 @@ uint32_t http1_deserialize(char *restrict buffer, const uint32_t buffer_size, ht
   bool error_occured = false;
 
   const uint16_t status_code_len = deserialize_status_code(buffer, buffer_end, response);
-  error_occured |= (status_code_len == 0);
+  error_occured |= (!status_code_len);
   buffer += status_code_len;
 
   const uint16_t reason_phrase_len = deserialize_reason_phrase(buffer, buffer_end, response);
-  error_occured |= (reason_phrase_len == 0);
+  error_occured |= (!reason_phrase_len);
   buffer += reason_phrase_len;
 
   const uint16_t headers_len = deserialize_headers(buffer, buffer_end, response);
-  error_occured |= (headers_len == 0);
+  error_occured |= (!headers_len);
   buffer += headers_len;
 
   response->body = buffer;
@@ -166,8 +166,7 @@ static uint16_t deserialize_headers(char *restrict buffer, const char *const buf
       .value_len = value_len
     };
 
-    header_map_set(header_map, &header);
-    headers_count++;
+    headers_count += header_map_set(header_map, &header);
   }
 
   buffer += STR_LEN("\r\n");
@@ -176,16 +175,28 @@ static uint16_t deserialize_headers(char *restrict buffer, const char *const buf
   return buffer - buffer_start;
 }
 
-static void header_map_set(http_header_map_t *const restrict map, const http_header_t *const restrict header)
+static bool header_map_set(http_header_map_t *const restrict map, const http_header_t *const restrict header)
 {
   const uint16_t map_size = map->size;
-  const uint16_t original_idx = (uint16_t)(XXH3_64bits(header->key, header->key_len) % map_size);
+  http_header_t *const entries = map->entries;
+  const http_header_t h = *header;
+  
+  const uint16_t original_idx = (uint16_t)(XXH3_64bits(h.key, h.key_len) % map_size);
 
+  bool duplicate_found = false;
   uint16_t idx = original_idx;
-  for (uint16_t i = 1; UNLIKELY(map->entries[idx].key != NULL); i++)
-    idx = (original_idx + i * i) % map_size;
+  http_header_t entry = entries[idx];
 
-  map->entries[idx] = *header;
+  for (uint16_t i = 1; UNLIKELY(entry.key != NULL && !duplicate_found); i++)
+  {
+    duplicate_found = (h.key_len == entry.key_len) && (memcmp(h.key, entry.key, h.key_len) == 0);
+
+    idx = (original_idx + i * i) % map_size;
+    entry = entries[idx];
+  }
+
+  entries[idx] = h;
+  return duplicate_found;
 }
 
 const char *header_map_get(const http_header_map_t *const restrict map, const char *const key, const uint16_t key_len)
@@ -194,15 +205,18 @@ const char *header_map_get(const http_header_map_t *const restrict map, const ch
   const uint16_t original_idx = (uint16_t)(XXH3_64bits(key, key_len) % map_size);
 
   uint16_t idx = original_idx;
-  for (uint16_t i = 0; LIKELY(map->entries[idx].key != NULL); i++)
+  http_header_t entry = map->entries[idx];
+  bool found = false;
+
+  for (uint16_t i = 0; LIKELY(entry.key != NULL && !found); i++)
   {
-    if (UNLIKELY(memcmp(map->entries[idx].key, key, key_len) == 0))
-      return map->entries[idx].value;
+    found = (key_len == entry.key_len) && (memcmp(key, entry.key, key_len) == 0);
 
     idx = (original_idx + i * i) % map_size;
+    entry = map->entries[idx];
   }
 
-  return NULL;
+  return found * entry.value;
 }
 
 static uint32_t atoui(const char *str, const char **const endptr)
@@ -229,12 +243,12 @@ static inline uint32_t mul10(uint32_t n)
   return (n << 3) + (n << 1);
 }
 
-void strtolower(char *str, uint16_t len)
+static void strtolower(char *str, uint16_t len)
 {
-  uint8_t unaligned_bytes = align_forward(str);
-  unaligned_bytes -= (unaligned_bytes > len) & (unaligned_bytes - len);
-  
-  while (UNLIKELY(unaligned_bytes--))
+  uint8_t misaligned_bytes = align_forward(str);
+  misaligned_bytes -= (misaligned_bytes > len) * (misaligned_bytes - len);
+
+  while (UNLIKELY(misaligned_bytes--))
   {
     const char c = *str;
     *str++ = c | (((uint8_t)(c - 'A') <= ('Z' - 'A')) << 5);

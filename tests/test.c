@@ -5,7 +5,7 @@ Creator: Claudio Raimondi
 Email: claudio.raimondi@pm.me                                                   
 
 created at: 2025-02-10 21:08:13                                                 
-last edited: 2025-03-02 19:14:36                                                
+last edited: 2025-03-02 22:55:24                                                
 
 ================================================================================*/
 
@@ -69,10 +69,7 @@ static bool compare_response_headers(const http_header_map_t *response_headers, 
   {
     const char *header = header_map_get(response_headers, expected_headers[i].key, expected_headers[i].key_len);
     if (header == NULL)
-    {
-      printf("header %s not found\n", expected_headers[i].key);
       return false;
-    }
 
     if (memcmp(header, expected_headers[i].value, expected_headers[i].value_len) != 0)
       return false;
