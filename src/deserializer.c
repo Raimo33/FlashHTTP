@@ -5,7 +5,7 @@ Creator: Claudio Raimondi
 Email: claudio.raimondi@pm.me                                                   
 
 created at: 2025-02-11 12:37:26                                                 
-last edited: 2025-03-02 15:33:00                                                
+last edited: 2025-03-02 18:23:58                                                
 
 ================================================================================*/
 
@@ -15,9 +15,9 @@ last edited: 2025-03-02 15:33:00
 #include "common.h"
 #include "deserializer.h"
 
-static uint16_t deserialize_status_code(const char *buffer, http_response_t *const restrict response);
-static uint16_t deserialize_reason_phrase(char *buffer, http_response_t *const restrict response);
-static uint16_t deserialize_headers(char *restrict buffer, http_response_t *const restrict response);
+static uint16_t deserialize_status_code(const char *buffer, const char *const buffer_end, http_response_t *const restrict response);
+static uint16_t deserialize_reason_phrase(char *buffer, const char *const buffer_end, http_response_t *const restrict response);
+static uint16_t deserialize_headers(char *restrict buffer, const char *const buffer_end, http_response_t *const restrict response);
 static void header_map_set(http_header_map_t *const restrict map, const http_header_t *const restrict header);
 static void strtolower(char *str, uint16_t len);
 static uint32_t atoui(const char *str, const char **const endptr);
@@ -63,48 +63,69 @@ CONSTRUCTOR void http_deserializer_init(void)
 #endif
 }
 
-//TODO maybe buffer size is needed for safety. memchr instead of rawmemchr?
-uint32_t http1_deserialize(char *restrict buffer, UNUSED const uint32_t buffer_size, http_response_t *const restrict response)
+uint32_t http1_deserialize(char *restrict buffer, const uint32_t buffer_size, http_response_t *const restrict response)
 {
   const char *const buffer_start = buffer;
+  const char *const buffer_end = buffer + buffer_size;
 
-  buffer += deserialize_status_code(buffer, response);
-  buffer += deserialize_reason_phrase(buffer, response);
-  buffer += deserialize_headers(buffer, response);
+  bool error_occured = false;
 
-  response->body = buffer;
+  const uint16_t status_code_len = deserialize_status_code(buffer, buffer_end, response);
+  error_occured |= (status_code_len == 0);
+  buffer += status_code_len;
 
-  return buffer - buffer_start;
+  const uint16_t reason_phrase_len = deserialize_reason_phrase(buffer, buffer_end, response);
+  error_occured |= (reason_phrase_len == 0);
+  buffer += reason_phrase_len;
+
+  const uint16_t headers_len = deserialize_headers(buffer, buffer_end, response);
+  error_occured |= (headers_len == 0);
+  buffer += headers_len;
+
+  response->body = buffer;  
+
+  const uint32_t total_bytes = buffer - buffer_start;
+  return total_bytes & -(uint32_t)(!error_occured);
 }
 
-static uint16_t deserialize_status_code(const char *buffer, http_response_t *const restrict response)
+static uint16_t deserialize_status_code(const char *buffer, const char *const buffer_end, http_response_t *const restrict response)
 {
   const char *const buffer_start = buffer;
+  
+  buffer = memchr(buffer, ' ', buffer_end - buffer);
 
-  buffer = rawmemchr(buffer, ' ');
-  const uint16_t status_code = atoui(buffer, &buffer);
+  const uint16_t mask = -(buffer != NULL);
+  uint16_t status_code = mask & atoui(buffer, &buffer);
+  const uint16_t mask2 = -(status_code - 100 < 499);
+  status_code &= mask2;
+
   response->status_code = status_code;
   buffer++;
 
-  return ((uint16_t)(status_code - 100) < 499) * (buffer - buffer_start); //TODO fix, return from the main function
+  return (buffer - buffer_start) & mask2;
 }
 
-static uint16_t deserialize_reason_phrase(char *buffer, http_response_t *const restrict response)
+static uint16_t deserialize_reason_phrase(char *buffer, UNUSED const char *const buffer_end, http_response_t *const restrict response)
 {
   const char *const buffer_start = buffer;
 
   buffer = rawmemchr(buffer, '\r');
   *buffer = '\0';
 
+  uint32_t reason_phrase_len = buffer - buffer_start;
+
+  const uint16_t mask = -(reason_phrase_len < UINT16_MAX);
+  reason_phrase_len &= mask;
+
   response->reason_phrase = buffer_start;
-  response->reason_phrase_len = buffer - buffer_start;
+  response->reason_phrase_len = reason_phrase_len;
 
   buffer += STR_LEN("\r\n");
 
-  return buffer - buffer_start;
+  return reason_phrase_len;
 }
 
-static uint16_t deserialize_headers(char *restrict buffer, http_response_t *const restrict response)
+static uint16_t deserialize_headers(char *restrict buffer, const char *const buffer_end, http_response_t *const restrict response)
 {
   const char *const buffer_start = buffer;
 
@@ -115,8 +136,14 @@ static uint16_t deserialize_headers(char *restrict buffer, http_response_t *cons
   while (LIKELY(*buffer != '\r'))
   {
     char *const key = buffer;
-    buffer = rawmemchr(buffer, ':');
-    const uint16_t key_len = buffer - key;
+    buffer = memchr(buffer, ':', buffer_end - buffer);
+    
+    if (UNLIKELY(!buffer || headers_count == header_map_size || headers_count == UINT16_MAX))
+      return 0;
+
+    uint32_t key_len = buffer - key;
+    const uint16_t key_mask = -(key_len < UINT16_MAX);
+    key_len &= key_mask;
     *buffer++ = '\0';
     buffer += strspn(buffer, " \t");
 
@@ -124,9 +151,15 @@ static uint16_t deserialize_headers(char *restrict buffer, http_response_t *cons
 
     const char *const value = buffer;
     buffer = rawmemchr(buffer, '\r');
-    const uint16_t value_len = buffer - value;
+
+    uint32_t value_len = buffer - value;
+    const uint16_t value_mask = -(value_len < UINT16_MAX);
+    value_len &= value_mask;
     *buffer = '\0';
     buffer += STR_LEN("\r\n");
+
+    if (UNLIKELY(key_len == 0 || value_len == 0))
+      return 0;
 
     const http_header_t header = {
       .key = key,
@@ -135,10 +168,8 @@ static uint16_t deserialize_headers(char *restrict buffer, http_response_t *cons
       .value_len = value_len
     };
 
-    if (UNLIKELY(headers_count++ == header_map_size))
-      return 0; //TODO fix, return from the main function
-
     header_map_set(header_map, &header);
+    headers_count++;
   }
 
   buffer += STR_LEN("\r\n");

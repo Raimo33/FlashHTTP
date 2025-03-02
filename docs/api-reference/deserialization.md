@@ -16,6 +16,7 @@ uint32_t http1_deserialize(char *restrict buffer, const uint32_t buffer_size, ht
 
 ### Description
 deserializes a http1 response in-place by replacing delimiters with `'\0'` and storing the pointers to the fields in the `response` struct.
+The headers are stored **lowercased** in a hashmap.
 
 ### Parameters
   - `buffer` - the buffer which contains the full serialized response
@@ -40,8 +41,9 @@ deserializes a http1 response in-place by replacing delimiters with `'\0'` and s
   - missing reason phrase
   - too many headers
   - missing colon in header
+  - missing header key
+  - missing header value
   - more than UINT16_MAX headers in the response
-  - path longer than UINT16_MAX
   - reason phrase longer than UINT16_MAX
   - header key longer than UINT16_MAX
   - header value longer than UINT16_MAX

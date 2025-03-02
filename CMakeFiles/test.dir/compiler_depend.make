@@ -91,8 +91,13 @@ CMakeFiles/test.dir/tests/test.c.o: tests/test.c \
   /usr/include/x86_64-linux-gnu/bits/types/struct_iovec.h \
   /usr/include/linux/falloc.h \
   /usr/include/x86_64-linux-gnu/bits/stat.h \
-  /usr/include/x86_64-linux-gnu/bits/struct_stat.h
+  /usr/include/x86_64-linux-gnu/bits/struct_stat.h \
+  /usr/include/x86_64-linux-gnu/sys/uio.h \
+  /usr/include/x86_64-linux-gnu/bits/uio_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/uio-ext.h
 
+
+/usr/include/x86_64-linux-gnu/sys/uio.h:
 
 /usr/include/x86_64-linux-gnu/bits/struct_stat.h:
 
@@ -103,6 +108,8 @@ CMakeFiles/test.dir/tests/test.c.o: tests/test.c \
 /usr/include/fcntl.h:
 
 /usr/include/alloca.h:
+
+/usr/include/x86_64-linux-gnu/bits/uio-ext.h:
 
 /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h:
 
@@ -117,6 +124,8 @@ CMakeFiles/test.dir/tests/test.c.o: tests/test.c \
 /usr/include/x86_64-linux-gnu/bits/uintn-identity.h:
 
 /usr/include/x86_64-linux-gnu/bits/endianness.h:
+
+/usr/include/x86_64-linux-gnu/bits/uio_lim.h:
 
 /usr/include/endian.h:
 

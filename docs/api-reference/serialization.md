@@ -29,8 +29,7 @@ serializes an HTTP/1.1 request into a buffer, adding separators where needed.
   - `request` is `NULL`
   - `request` doesn't fit in the buffer
   - `value_len`, `tag_len`, `path_len`, `body_len` are different from the actual lengths of the strings
-  - `path` is `NULL`
-
+  - `path` is NULL
 
 ## http1_serialize_write
 
@@ -53,7 +52,7 @@ serializes on the fly and writes an HTTP/1.1 request to a file descriptor.
   - `fd` is not a valid file descriptor
   - `request` is `NULL`
   - `value_len`, `tag_len`, `path_len`, `body_len` are different from the actual lengths of the strings
-  - `path` is `NULL`
+  - `path` is NULL
 
 ### Errors
   - `writev` syscall error

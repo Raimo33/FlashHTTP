@@ -5,7 +5,7 @@ Creator: Claudio Raimondi
 Email: claudio.raimondi@pm.me                                                   
 
 created at: 2025-02-10 21:08:13                                                 
-last edited: 2025-03-02 15:33:00                                                
+last edited: 2025-03-02 18:23:58                                                
 
 ================================================================================*/
 
@@ -16,7 +16,9 @@ last edited: 2025-03-02 15:33:00
 #include <unistd.h>
 #include <stdlib.h>
 #include <fcntl.h>
+#include <sys/uio.h>
 
+#define STR_LEN(x) (sizeof(x) - 1)
 #define ARR_SIZE(x) (sizeof(x) / sizeof(x[0]))
 
 #define mu_assert(message, test) do { if (!(test)) return message; } while (0)
@@ -66,8 +68,18 @@ static bool compare_response_headers(const http_header_map_t *response_headers, 
 
 static char *all_tests(void);
 static char *test_serialize_normal_message(void);
+static char *test_serialize_no_headers(void);
+static char *test_serialize_no_body(void);
+static char *test_serialize_no_headers_no_body(void);
+
 static char *test_serialize_write_normal_message(void);
+static char *test_serialize_write_no_headers(void);
+static char *test_serialize_write_no_body(void);
+static char *test_serialize_write_no_headers_no_body(void);
+static char *test_serialize_write_too_many_headers(void);
+
 static char *test_deserialize_normal_message(void);
+static char *test_deserialize_duplicate_headers(void);
 
 int main(void)
 {
@@ -83,15 +95,21 @@ int main(void)
   return !!result;
 }
 
-//TODO other tests according to the documentation
 static char *all_tests(void)
 {
   mu_run_test(test_serialize_normal_message);
+  mu_run_test(test_serialize_no_headers);
+  mu_run_test(test_serialize_no_body);
+  mu_run_test(test_serialize_no_headers_no_body);
 
   mu_run_test(test_serialize_write_normal_message);
+  mu_run_test(test_serialize_write_no_headers);
+  mu_run_test(test_serialize_write_no_body);
+  mu_run_test(test_serialize_write_no_headers_no_body);
+  mu_run_test(test_serialize_write_too_many_headers);
 
   mu_run_test(test_deserialize_normal_message);
-  //TODO test duplacate header
+  mu_run_test(test_deserialize_duplicate_headers);
 
   return 0;
 }
@@ -121,7 +139,7 @@ static char *test_serialize_normal_message(void)
     .headers = headers,
     .headers_count = 12,
     .body = body,
-    .body_len = strlen(body)
+    .body_len = STR_LEN(body)
   };
   const char expected_buffer[] =
     "GET /example/path/resource HTTP/1.1\r\n"
@@ -139,13 +157,89 @@ static char *test_serialize_normal_message(void)
     "Sec-Fetch-User: ?1\r\n"
     "\r\n"
     "This is the body of the request";
-  const uint16_t expected_len = strlen(expected_buffer);
+  const uint16_t expected_len = STR_LEN(expected_buffer);
 
   char buffer[sizeof(expected_buffer)] = {0};
   uint32_t len = http1_serialize(buffer, &request);
 
   mu_assert("error: serialize normal message: wrong length", len == expected_len);
   mu_assert("error: serialize normal message: wrong buffer", memcmp(buffer, expected_buffer, len) == 0);
+
+  return 0;
+}
+
+static char *test_serialize_no_headers(void)
+{
+  const char body[] = "This is the body of the request";
+  const http_request_t request = {
+    .method = GET,
+    .path = "/example/path/resource",
+    .path_len = 22,
+    .version = HTTP_1_1,
+    .body = body,
+    .body_len = STR_LEN(body)
+  };
+  const char expected_buffer[] =
+    "GET /example/path/resource HTTP/1.1\r\n"
+    "\r\n"
+    "This is the body of the request";
+  const uint16_t expected_len = STR_LEN(expected_buffer);
+
+  char buffer[sizeof(expected_buffer)] = {0};
+  uint32_t len = http1_serialize(buffer, &request);
+
+  mu_assert("error: serialize no headers: wrong length", len == expected_len);
+  mu_assert("error: serialize no headers: wrong buffer", memcmp(buffer, expected_buffer, len) == 0);
+
+  return 0;
+}
+
+static char *test_serialize_no_body(void)
+{
+  const http_header_t headers = {
+    .key = "Host", .value = "example.com", .key_len = 4, .value_len = 11
+  };
+  const http_request_t request = {
+    .method = GET,
+    .path = "/example/path/resource",
+    .path_len = 22,
+    .version = HTTP_1_1,
+    .headers = &headers,
+    .headers_count = 1
+  };
+  const char expected_buffer[] =
+    "GET /example/path/resource HTTP/1.1\r\n"
+    "Host: example.com\r\n"
+    "\r\n";
+  const uint16_t expected_len = STR_LEN(expected_buffer);
+
+  char buffer[sizeof(expected_buffer)] = {0};
+  uint32_t len = http1_serialize(buffer, &request);
+
+  mu_assert("error: serialize no body: wrong length", len == expected_len);
+  mu_assert("error: serialize no body: wrong buffer", memcmp(buffer, expected_buffer, len) == 0);
+
+  return 0;
+}
+
+static char *test_serialize_no_headers_no_body(void)
+{
+  const http_request_t request = {
+    .method = GET,
+    .path = "/example/path/resource",
+    .path_len = 22,
+    .version = HTTP_1_1
+  };
+  const char expected_buffer[] =
+    "GET /example/path/resource HTTP/1.1\r\n"
+    "\r\n";
+  const uint16_t expected_len = STR_LEN(expected_buffer);
+
+  char buffer[sizeof(expected_buffer)] = {0};
+  uint32_t len = http1_serialize(buffer, &request);
+
+  mu_assert("error: serialize no headers no body: wrong length", len == expected_len);
+  mu_assert("error: serialize no headers no body: wrong buffer", memcmp(buffer, expected_buffer, len) == 0);
 
   return 0;
 }
@@ -175,7 +269,7 @@ static char *test_serialize_write_normal_message(void)
     .headers = headers,
     .headers_count = 12,
     .body = body,
-    .body_len = strlen(body)
+    .body_len = STR_LEN(body)
   };
   const char expected_buffer[] =
     "GET /example/path/resource HTTP/1.1\r\n"
@@ -193,7 +287,7 @@ static char *test_serialize_write_normal_message(void)
     "Sec-Fetch-User: ?1\r\n"
     "\r\n"
     "This is the body of the request";
-  const uint16_t expected_len = strlen(expected_buffer);
+  const uint16_t expected_len = STR_LEN(expected_buffer);
 
   int fds[2];
   if (pipe(fds) == -1)
@@ -202,6 +296,135 @@ static char *test_serialize_write_normal_message(void)
 
   mu_assert("error: serialize write normal message: wrong length", len == expected_len);
   mu_assert("error: serialize write normal message: wrong output", compare_file(fds[0], expected_buffer, expected_len));
+
+  close(fds[0]);
+  close(fds[1]);
+
+  return 0;
+}
+
+static char *test_serialize_write_no_headers(void)
+{
+  const char body[] = "This is the body of the request";
+  const http_request_t request = {
+    .method = GET,
+    .path = "/example/path/resource",
+    .path_len = 22,
+    .version = HTTP_1_1,
+    .body = body,
+    .body_len = STR_LEN(body)
+  };
+  const char expected_buffer[] =
+    "GET /example/path/resource HTTP/1.1\r\n"
+    "\r\n"
+    "This is the body of the request";
+  const uint16_t expected_len = STR_LEN(expected_buffer);
+
+  int fds[2];
+  if (pipe(fds) == -1)
+    return strerror(errno);
+  int32_t len = http1_serialize_write(fds[1], &request);
+
+  mu_assert("error: serialize write no headers: wrong length", len == expected_len);
+  mu_assert("error: serialize write no headers: wrong output", compare_file(fds[0], expected_buffer, expected_len));
+
+  close(fds[0]);
+  close(fds[1]);
+
+  return 0;
+}
+
+static char *test_serialize_write_no_body(void)
+{
+  const http_header_t headers = {
+    .key = "Host", .value = "example.com", .key_len = 4, .value_len = 11
+  };
+  const http_request_t request = {
+    .method = GET,
+    .path = "/example/path/resource",
+    .path_len = 22,
+    .version = HTTP_1_1,
+    .headers = &headers,
+    .headers_count = 1
+  };
+  const char expected_buffer[] =
+    "GET /example/path/resource HTTP/1.1\r\n"
+    "Host: example.com\r\n"
+    "\r\n";
+  const uint16_t expected_len = STR_LEN(expected_buffer);
+
+  int fds[2];
+  if (pipe(fds) == -1)
+    return strerror(errno);
+  int32_t len = http1_serialize_write(fds[1], &request);
+
+  mu_assert("error: serialize write no body: wrong length", len == expected_len);
+  mu_assert("error: serialize write no body: wrong output", compare_file(fds[0], expected_buffer, expected_len));
+
+  close(fds[0]);
+  close(fds[1]);
+
+  return 0;
+}
+
+static char *test_serialize_write_no_headers_no_body(void)
+{
+  const http_request_t request = {
+    .method = GET,
+    .path = "/example/path/resource",
+    .path_len = 22,
+    .version = HTTP_1_1
+  };
+  const char expected_buffer[] =
+    "GET /example/path/resource HTTP/1.1\r\n"
+    "\r\n";
+  const uint16_t expected_len = STR_LEN(expected_buffer);
+
+  int fds[2];
+  if (pipe(fds) == -1)
+    return strerror(errno);
+  int32_t len = http1_serialize_write(fds[1], &request);
+
+  mu_assert("error: serialize write no headers no body: wrong length", len == expected_len);
+  mu_assert("error: serialize write no headers no body: wrong output", compare_file(fds[0], expected_buffer, expected_len));
+
+  close(fds[0]);
+  close(fds[1]);
+
+  return 0;
+}
+
+static char *test_serialize_write_too_many_headers(void)
+{
+  http_header_t *headers = calloc(IOV_MAX, sizeof(http_header_t));
+  if (headers == NULL)
+    return strerror(errno);
+  
+  for (uint16_t i = 0; i < IOV_MAX; i++)
+  {
+    headers[i] = (http_header_t) {
+      .key = "Header", .value = "Value", .key_len = 6, .value_len = 5
+    };
+  }
+
+  const char body[] = "This is the body of the request";
+  const http_request_t request = {
+    .method = GET,
+    .path = "/example/path/resource",
+    .path_len = 22,
+    .version = HTTP_1_1,
+    .headers = headers,
+    .headers_count = 12,
+    .body = body,
+    .body_len = STR_LEN(body)
+  };
+
+  int fds[2];
+  if (pipe(fds) == -1)
+    return strerror(errno);
+  int32_t len = http1_serialize_write(fds[1], &request);
+
+  mu_assert("error: serialize write normal message: wrong length", len == -1);
 
   close(fds[0]);
   close(fds[1]);
@@ -251,15 +474,10 @@ static char *test_deserialize_normal_message(void)
     "<h1>This is the body of the response</h1>\n"
     "</body>\n"
     "</html>";
-  const uint32_t expected_len = strlen(buffer) - strlen(expected_body);
+  const uint32_t expected_len = STR_LEN(buffer) - STR_LEN(expected_body);
 
   http_header_t headers[HEADER_MAP_CAPACITY(7)] = {0};
-  http_response_t response = {
-    .headers = {
-      .entries = headers,
-      .size = ARR_SIZE(headers)
-    }
-  };
+  http_response_t response = { .headers.entries = headers, .headers.size = ARR_SIZE(headers) };
   const uint32_t len = http1_deserialize(buffer, sizeof(buffer), &response);
 
   mu_assert("error: deserialize normal message: wrong length", len == expected_len);
@@ -268,6 +486,39 @@ static char *test_deserialize_normal_message(void)
   mu_assert("error: deserialize normal message: wrong headers count", response.headers_count == 7);
   mu_assert("error: deserialize normal message: wrong headers", compare_response_headers(&response.headers, expected_headers, 7));
   mu_assert("error: deserialize normal message: wrong body", memcmp(response.body, expected_body, sizeof(expected_body)) == 0);
+
+  return 0;
+}
+
+static char *test_deserialize_duplicate_headers(void)
+{
+  char buffer[] =
+    "HTTP/1.1 200 OK\r\n"
+    "Content-Type: text/html; charset=UTF-8\r\n"
+    "Content-Length: 1234\r\n"
+    "Content-Type: text/plain\r\n"
+    "Content-Length: 5678\r\n"
+    "\r\n"
+    "This is the body of the response";
+  const uint16_t expected_status_code = 200;
+  const char expected_reason_phrase[] = "OK";
+  const http_header_t expected_headers[] = {
+    { .key = "content-type",    .value = "text/plain", .key_len = 12,  .value_len = 10 },
+    { .key = "content-length",  .value = "5678",       .key_len = 14,  .value_len = 4 }
+  };
+  const char expected_body[] = "This is the body of the response";
+  const uint32_t expected_len = STR_LEN(buffer) - STR_LEN(expected_body);
+
+  http_header_t headers[HEADER_MAP_CAPACITY(2)] = {0};
+  http_response_t response = { .headers.entries = headers, .headers.size = ARR_SIZE(headers) };
+  const uint32_t len = http1_deserialize(buffer, sizeof(buffer), &response);
+
+  mu_assert("error: deserialize duplicate headers: wrong length", len == expected_len);
+  mu_assert("error: deserialize duplicate headers: wrong status code", response.status_code == expected_status_code);
+  mu_assert("error: deserialize duplicate headers: wrong reason phrase", memcmp(response.reason_phrase, expected_reason_phrase, 2) == 0);
+  mu_assert("error: deserialize duplicate headers: wrong headers count", response.headers_count == 2);
+  mu_assert("error: deserialize duplicate headers: wrong headers", compare_response_headers(&response.headers, expected_headers, 2));
+  mu_assert("error: deserialize duplicate headers: wrong body", memcmp(response.body, expected_body, sizeof(expected_body)) == 0);
 
   return 0;
 }
