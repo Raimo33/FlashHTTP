@@ -5,7 +5,7 @@ Creator: Claudio Raimondi
 Email: claudio.raimondi@pm.me                                                   
 
 created at: 2025-02-11 12:37:26                                                 
-last edited: 2025-03-02 15:33:00                                                
+last edited: 2025-03-03 21:42:14                                                
 
 ================================================================================*/
 
@@ -201,7 +201,7 @@ static uint16_t vectorize_headers(struct iovec *restrict iov, const http_header_
 {
   const struct iovec *const iov_start = iov;
 
-  for (uint16_t i = 0; LIKELY(i < headers_count); i++) //TODO headers can be NULL, check if UB
+  for (uint16_t i = 0; LIKELY(i < headers_count); i++)
   {
     const http_header_t *header = &headers[i];
 

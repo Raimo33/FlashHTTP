@@ -5,7 +5,7 @@ Creator: Claudio Raimondi
 Email: claudio.raimondi@pm.me                                                   
 
 created at: 2025-02-10 21:08:13                                                 
-last edited: 2025-03-03 20:58:12                                                
+last edited: 2025-03-03 21:42:14                                                
 
 ================================================================================*/
 
@@ -48,6 +48,20 @@ static bool compare_file(int fd, const char *expected_buffer, const uint32_t exp
     total_read += bytes_read;
   }
   
+  return true;
+}
+
+static bool compare_headers(const http_header_t *headers, const http_header_t *expected_headers, const uint16_t headers_count)
+{
+  for (uint16_t i = 0; i < headers_count; i++)
+  {
+    const bool values_match = memcmp(headers[i].value, expected_headers[i].value, headers[i].value_len) == 0;
+    const bool keys_match = memcmp(headers[i].key, expected_headers[i].key, headers[i].key_len) == 0;
+
+    if (!values_match || !keys_match)
+      return false;
+  }
+
   return true;
 }
 
@@ -441,13 +455,13 @@ static char *test_deserialize_normal_message(void)
   const uint16_t expected_status_code = 200;
   const char expected_reason_phrase[] = "OK";
   const http_header_t expected_headers[] = {
-    { .key = "content-type",    .value = "text/html; charset=UTF-8",      .key_len = 12,  .value_len = 24 },
-    { .key = "content-length",  .value = "1234",                          .key_len = 14,  .value_len = 4 },
-    { .key = "connection",      .value = "keep-alive",                    .key_len = 10,  .value_len = 10 },
-    { .key = "server",          .value = "Apache/2.4.41 (Unix)",          .key_len = 6,   .value_len = 20 },
-    { .key = "cache-control",   .value = "max-age=3600",                  .key_len = 13,  .value_len = 12 },
-    { .key = "etag",            .value = "\"abc123\"",                    .key_len = 4,   .value_len = 8 },
-    { .key = "date",            .value = "Mon, 01 Jan 2023 12:00:00 GMT", .key_len = 4,   .value_len = 29 }
+    { .key = "Content-Type",    .value = "text/html; charset=UTF-8",      .key_len = 12,  .value_len = 24 },
+    { .key = "Content-Length",  .value = "1234",                          .key_len = 14,  .value_len = 4 },
+    { .key = "Connection",      .value = "keep-alive",                    .key_len = 10,  .value_len = 10 },
+    { .key = "Server",          .value = "Apache/2.4.41 (Unix)",          .key_len = 6,   .value_len = 20 },
+    { .key = "Cache-Control",   .value = "max-age=3600",                  .key_len = 13,  .value_len = 12 },
+    { .key = "ETag",            .value = "\"abc123\"",                    .key_len = 4,   .value_len = 8 },
+    { .key = "Date",            .value = "Mon, 01 Jan 2023 12:00:00 GMT", .key_len = 4,   .value_len = 29 }
   };
   const char expected_body[] =
     "<!DOCTYPE html>\n"
@@ -469,7 +483,7 @@ static char *test_deserialize_normal_message(void)
   mu_assert("error: deserialize normal message: wrong status code", response.status_code == expected_status_code);
   mu_assert("error: deserialize normal message: wrong reason phrase", memcmp(response.reason_phrase, expected_reason_phrase, 2) == 0);
   mu_assert("error: deserialize normal message: wrong headers count", response.headers_count == 7);
-  mu_assert("error: deserialize normal message: wrong headers", memcmp(response.headers, expected_headers, sizeof(expected_headers)) == 0);
+  mu_assert("error: deserialize normal message: wrong headers", compare_headers(response.headers, expected_headers, response.headers_count));
   mu_assert("error: deserialize normal message: wrong body", memcmp(response.body, expected_body, sizeof(expected_body)) == 0);
 
   return 0;
@@ -488,8 +502,10 @@ static char *test_deserialize_duplicate_headers(void)
   const uint16_t expected_status_code = 200;
   const char expected_reason_phrase[] = "OK";
   const http_header_t expected_headers[] = {
-    { .key = "content-type",    .value = "text/plain", .key_len = 12,  .value_len = 10 },
-    { .key = "content-length",  .value = "5678",       .key_len = 14,  .value_len = 4 }
+    { .key = "Content-Type",   .value = "text/html; charset=UTF-8", .key_len = 12, .value_len = 24 },
+    { .key = "Content-Length", .value = "1234",                     .key_len = 14, .value_len = 4 },
+    { .key = "Content-Type",   .value = "text/plain",               .key_len = 12, .value_len = 10 },
+    { .key = "Content-Length", .value = "5678",                     .key_len = 14, .value_len = 4 }
   };
   const char expected_body[] = "This is the body of the response";
   const uint32_t expected_len = STR_LEN(buffer) - STR_LEN(expected_body);
@@ -498,14 +514,11 @@ static char *test_deserialize_duplicate_headers(void)
   http_response_t response = { .headers = headers, .headers_count = ARR_SIZE(headers) };
   const uint32_t len = http1_deserialize(buffer, sizeof(buffer), &response);
 
-  printf("headers count: %d\n", response.headers_count);
-  printf("expected headers count: %d\n", 2);
-
   mu_assert("error: deserialize duplicate headers: wrong length", len == expected_len);
   mu_assert("error: deserialize duplicate headers: wrong status code", response.status_code == expected_status_code);
   mu_assert("error: deserialize duplicate headers: wrong reason phrase", memcmp(response.reason_phrase, expected_reason_phrase, 2) == 0);
-  mu_assert("error: deserialize duplicate headers: wrong headers count", response.headers_count == 2);
-  mu_assert("error: deserialize duplicate headers: wrong headers", memcmp(response.headers, expected_headers, sizeof(expected_headers)) == 0);
+  mu_assert("error: deserialize duplicate headers: wrong headers count", response.headers_count == ARR_SIZE(expected_headers));
+  mu_assert("error: deserialize duplicate headers: wrong headers", compare_headers(response.headers, expected_headers, response.headers_count));
   mu_assert("error: deserialize duplicate headers: wrong body", memcmp(response.body, expected_body, sizeof(expected_body)) == 0);
 
   return 0;

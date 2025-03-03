@@ -5,7 +5,7 @@ Creator: Claudio Raimondi
 Email: claudio.raimondi@pm.me                                                   
 
 created at: 2025-02-11 12:37:26                                                 
-last edited: 2025-03-01 17:39:45                                                
+last edited: 2025-03-03 21:42:14                                                
 
 ================================================================================*/
 
@@ -22,6 +22,5 @@ last edited: 2025-03-01 17:39:45
 uint32_t http1_serialize(char *restrict buffer, const http_request_t *restrict request);
 int32_t http1_serialize_write(const int fd, const http_request_t *restrict request);
 //TODO support for http2 and http3
-//TODO direct zero-copy write with writev
 
 #endif

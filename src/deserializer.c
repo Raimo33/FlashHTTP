@@ -5,7 +5,7 @@ Creator: Claudio Raimondi
 Email: claudio.raimondi@pm.me                                                   
 
 created at: 2025-02-11 12:37:26                                                 
-last edited: 2025-03-03 20:58:12                                                
+last edited: 2025-03-03 21:42:14                                                
 
 ================================================================================*/
 
@@ -91,8 +91,9 @@ static uint16_t deserialize_headers(char *restrict buffer, const char *const buf
   {
     char *const key = buffer;
     buffer = memchr(buffer, ':', buffer_end - buffer);
-    
-    if (UNLIKELY(!buffer || headers_count++ == max_headers || headers_count == UINT16_MAX)) //TODO reduce branching
+
+    bool valid = (buffer != NULL) & (headers_count < max_headers) & (headers_count < UINT16_MAX);
+    if (UNLIKELY(!valid))
       return 0;
 
     uint32_t key_len = buffer - key;
@@ -108,7 +109,8 @@ static uint16_t deserialize_headers(char *restrict buffer, const char *const buf
     buffer += STR_LEN("\r\n");
     const bool valid_value = (value_len != 0) & (value_len <= UINT16_MAX);
 
-    if (UNLIKELY(!valid_key || !valid_value))
+    valid = valid_key & valid_value;
+    if (UNLIKELY(!valid))
       return 0;
 
     *headers++ = (http_header_t) {
@@ -117,6 +119,7 @@ static uint16_t deserialize_headers(char *restrict buffer, const char *const buf
       .value = value,
       .value_len = value_len
     };
+    headers_count++;
   }
 
   buffer += STR_LEN("\r\n");
