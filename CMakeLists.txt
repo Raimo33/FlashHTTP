@@ -31,11 +31,6 @@ set(FLASHTTP_COMPILE_OPTIONS
   -fno-asynchronous-unwind-tables -funroll-loops -fomit-frame-pointer
 )
 
-find_library(XXHASH_LIBRARY NAMES xxhash)
-if(NOT XXHASH_LIBRARY)
-  message(FATAL_ERROR "xxHash library not found")
-endif()
-
 add_library(flashttp_shared SHARED ${FLASHTTP_SOURCES})
 set_target_properties(flashttp_shared PROPERTIES
   VERSION ${FLASHTTP_VERSION}
@@ -45,14 +40,12 @@ set_target_properties(flashttp_shared PROPERTIES
 target_compile_options(flashttp_shared PUBLIC ${FLASHTTP_COMPILE_OPTIONS})
 target_include_directories(flashttp_shared PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_compile_definitions(flashttp_shared PUBLIC _GNU_SOURCE)
-target_link_libraries(flashttp_shared xxhash)
 
 add_library(flashttp_static STATIC ${FLASHTTP_SOURCES})
 set_target_properties(flashttp_static PROPERTIES OUTPUT_NAME flashttp)
 target_compile_options(flashttp_static PUBLIC ${FLASHTTP_COMPILE_OPTIONS})
 target_include_directories(flashttp_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_compile_definitions(flashttp_static PUBLIC _GNU_SOURCE)
-target_link_libraries(flashttp_static xxhash)
 
 install(TARGETS flashttp_shared flashttp_static
   ARCHIVE DESTINATION lib

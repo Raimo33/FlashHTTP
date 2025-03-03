@@ -6,7 +6,7 @@ The following function prototypes can be found in the `deserialization.h` header
 #include <flashttp/deserialization.h>
 ```
 
-These functions **only verify the structural integrity** of messages in terms of format. The body is served raw, without any decoding or parsing. It is up to the user to interpret the headers and eventually decode the body. Duplicate headers are handled by replacing the previous value with the new one.
+These functions **only verify the structural integrity** of messages in terms of format. The body is served raw, without any decoding or parsing. It is up to the user to interpret the headers and eventually decode the body. Duplicate headers are not concatenated, but stored as separate fields.
 
 ## http1_deserialize
 
@@ -16,13 +16,13 @@ uint32_t http1_deserialize(char *restrict buffer, const uint32_t buffer_size, ht
 
 ### Description
 deserializes a http1 response in-place by replacing delimiters with `'\0'` and storing the pointers to the fields in the `response` struct.
-The headers are stored **lowercased** in a hashmap.
 
 ### Parameters
   - `buffer` - the buffer which contains the full serialized response
   - `buffer_size` - the size of the buffer in bytes
   - `response` - the response struct where to store the deserialized fields, with the following conditions:
-    - `headers` already allocated with a number of fields larger than the expected number of headers, the larger the faster (see [examples](/examples.md))
+    - `headers` already allocated with a number of fields that matches the expected number of headers
+    - `headers_count` set to the number of allocated headers
     - everything else should be zeroed (`0`' or `NULL`)
 
 ### Returns
@@ -47,27 +47,3 @@ The headers are stored **lowercased** in a hashmap.
   - reason phrase longer than UINT16_MAX
   - header key longer than UINT16_MAX
   - header value longer than UINT16_MAX
-
-
-## header_map_get
-
-```c
-const char *header_map_get(const http_header_map_t *const restrict map, const char *const key, const uint16_t key_len);
-```
-
-### Description
-retrieves the value of a header from a header map.
-
-### Parameters
-  - `map` - the header map to search in
-  - `key` - the key of the header to search for
-  - `key_len` - the length of the key
-
-### Returns
-  - the value of the header if found
-  - `NULL` if the header is not found
-
-### Undefined Behavior
-  - `map` is `NULL`
-  - `key` is `NULL`
-  - `key_len` is `0`

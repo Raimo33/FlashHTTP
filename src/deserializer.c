@@ -5,12 +5,11 @@ Creator: Claudio Raimondi
 Email: claudio.raimondi@pm.me                                                   
 
 created at: 2025-02-11 12:37:26                                                 
-last edited: 2025-03-02 22:55:24                                                
+last edited: 2025-03-03 20:58:12                                                
 
 ================================================================================*/
 
 #include <string.h>
-#include <xxhash.h>
 
 #include "common.h"
 #include "deserializer.h"
@@ -18,50 +17,8 @@ last edited: 2025-03-02 22:55:24
 static uint16_t deserialize_status_code(const char *buffer, const char *const buffer_end, http_response_t *const restrict response);
 static uint16_t deserialize_reason_phrase(char *buffer, const char *const buffer_end, http_response_t *const restrict response);
 static uint16_t deserialize_headers(char *restrict buffer, const char *const buffer_end, http_response_t *const restrict response);
-static void header_map_set(http_header_map_t *const restrict map, const http_header_t *const restrict header);
-static void strtolower(char *str, uint16_t len);
 static uint32_t atoui(const char *str, const char **const endptr);
 static inline uint32_t mul10(uint32_t n);
-
-//TODO find a way to make them const, forcing prevention of thread safety issues, constexpr??
-#ifdef __AVX512F__
-  static __m512i _512_vec_A_minus_1;
-  static __m512i _512_vec_case_range;
-  static __m512i _512_add_mask;
-#endif
-
-#ifdef __AVX2__
-  static __m256i _256_vec_A_minus_1;
-  static __m256i _256_vec_case_range;
-  static __m256i _256_add_mask;
-#endif
-
-#ifdef __SSE2__
-  static __m128i _128_vec_A_minus_1;
-  static __m128i _128_vec_case_range;
-  static __m128i _128_add_mask;
-#endif
-
-CONSTRUCTOR void http_deserializer_init(void)
-{
-#ifdef __AVX512F__
-  _512_vec_A_minus_1 = _mm512_set1_epi8('A' - 1);
-  _512_vec_case_range = _mm512_set1_epi8('Z' - 'A' + 1);
-  _512_add_mask = _mm512_set1_epi8('a' - 'A');
-#endif
-
-#ifdef __AVX2__
-  _256_vec_A_minus_1 = _mm256_set1_epi8('A' - 1);
-  _256_vec_case_range = _mm256_set1_epi8('Z' - 'A' + 1);
-  _256_add_mask = _mm256_set1_epi8('a' - 'A');
-#endif
-
-#ifdef __SSE2__
-  _128_vec_A_minus_1 = _mm_set1_epi8('A' - 1);
-  _128_vec_case_range = _mm_set1_epi8('Z' - 'A' + 1);
-  _128_add_mask = _mm_set1_epi8('a' - 'A');
-#endif
-}
 
 uint32_t http1_deserialize(char *restrict buffer, const uint32_t buffer_size, http_response_t *const restrict response)
 {
@@ -71,20 +28,20 @@ uint32_t http1_deserialize(char *restrict buffer, const uint32_t buffer_size, ht
   bool error_occured = false;
 
   const uint16_t status_code_len = deserialize_status_code(buffer, buffer_end, response);
-  error_occured |= (!status_code_len);
+  error_occured |= (status_code_len == 0);
   buffer += status_code_len;
 
   const uint16_t reason_phrase_len = deserialize_reason_phrase(buffer, buffer_end, response);
-  error_occured |= (!reason_phrase_len);
+  error_occured |= (reason_phrase_len == 0);
   buffer += reason_phrase_len;
 
   const uint16_t headers_len = deserialize_headers(buffer, buffer_end, response);
-  error_occured |= (!headers_len);
+  error_occured |= (headers_len == 0);
   buffer += headers_len;
 
   response->body = buffer;
 
-  return (buffer - buffer_start) & -(uint32_t)(!error_occured);
+  return (buffer - buffer_start) * !error_occured;
 }
 
 static uint16_t deserialize_status_code(const char *buffer, const char *const buffer_end, http_response_t *const restrict response)
@@ -97,10 +54,9 @@ static uint16_t deserialize_status_code(const char *buffer, const char *const bu
   response->status_code = status_code;
   buffer++;
 
-  const bool invalid = (status_code - 100) > 600;
-  const bool overflow = (status_code > UINT16_MAX);
+  const bool valid = (status_code - 100) < 499;
 
-  return (buffer - buffer_start) & -(uint16_t)(!invalid && !overflow);
+  return (buffer - buffer_start) * valid;
 }
 
 static uint16_t deserialize_reason_phrase(char *buffer, UNUSED const char *const buffer_end, http_response_t *const restrict response)
@@ -117,18 +73,18 @@ static uint16_t deserialize_reason_phrase(char *buffer, UNUSED const char *const
 
   buffer += STR_LEN("\r\n");
 
-  const bool empty = (reason_phrase_len == 0);
-  const bool overflow = (reason_phrase_len > UINT16_MAX);
+  bool valid = (reason_phrase_len != 0);
+  valid &= (reason_phrase_len <= UINT16_MAX);
 
-  return (buffer - buffer_start) & -(uint16_t)(!empty && !overflow);
+  return (buffer - buffer_start) * valid;
 }
 
 static uint16_t deserialize_headers(char *restrict buffer, const char *const buffer_end, http_response_t *const restrict response)
 {
   const char *const buffer_start = buffer;
 
-  const uint16_t header_map_size = response->headers.size;
-  http_header_map_t *const header_map = &response->headers;
+  const uint16_t max_headers = response->headers_count;
+  http_header_t *headers = response->headers;
   uint16_t headers_count = 0;
 
   while (LIKELY(*buffer != '\r'))
@@ -136,87 +92,37 @@ static uint16_t deserialize_headers(char *restrict buffer, const char *const buf
     char *const key = buffer;
     buffer = memchr(buffer, ':', buffer_end - buffer);
     
-    if (UNLIKELY(!buffer || headers_count == header_map_size || headers_count == UINT16_MAX))
+    if (UNLIKELY(!buffer || headers_count++ == max_headers || headers_count == UINT16_MAX)) //TODO reduce branching
       return 0;
 
     uint32_t key_len = buffer - key;
-    const uint16_t key_mask = -(key_len < UINT16_MAX);
-    key_len &= key_mask;
     *buffer++ = '\0';
     buffer += strspn(buffer, " \t");
-
-    strtolower(key, key_len);
+    const bool valid_key = (key_len != 0) & (key_len <= UINT16_MAX);
 
     const char *const value = buffer;
     buffer = rawmemchr(buffer, '\r');
 
     uint32_t value_len = buffer - value;
-    const uint16_t value_mask = -(value_len < UINT16_MAX);
-    value_len &= value_mask;
     *buffer = '\0';
     buffer += STR_LEN("\r\n");
+    const bool valid_value = (value_len != 0) & (value_len <= UINT16_MAX);
 
-    if (UNLIKELY(key_len == 0 || value_len == 0))
+    if (UNLIKELY(!valid_key || !valid_value))
       return 0;
 
-    const http_header_t header = {
+    *headers++ = (http_header_t) {
       .key = key,
       .key_len = key_len,
       .value = value,
       .value_len = value_len
     };
-
-    headers_count += header_map_set(header_map, &header);
   }
 
   buffer += STR_LEN("\r\n");
   response->headers_count = headers_count;
 
   return buffer - buffer_start;
-}
-
-static bool header_map_set(http_header_map_t *const restrict map, const http_header_t *const restrict header)
-{
-  const uint16_t map_size = map->size;
-  http_header_t *const entries = map->entries;
-  const http_header_t h = *header;
-  
-  const uint16_t original_idx = (uint16_t)(XXH3_64bits(h.key, h.key_len) % map_size);
-
-  bool duplicate_found = false;
-  uint16_t idx = original_idx;
-  http_header_t entry = entries[idx];
-
-  for (uint16_t i = 1; UNLIKELY(entry.key != NULL && !duplicate_found); i++)
-  {
-    duplicate_found = (h.key_len == entry.key_len) && (memcmp(h.key, entry.key, h.key_len) == 0);
-
-    idx = (original_idx + i * i) % map_size;
-    entry = entries[idx];
-  }
-
-  entries[idx] = h;
-  return duplicate_found;
-}
-
-const char *header_map_get(const http_header_map_t *const restrict map, const char *const key, const uint16_t key_len)
-{
-  const uint16_t map_size = map->size;
-  const uint16_t original_idx = (uint16_t)(XXH3_64bits(key, key_len) % map_size);
-
-  uint16_t idx = original_idx;
-  http_header_t entry = map->entries[idx];
-  bool found = false;
-
-  for (uint16_t i = 0; LIKELY(entry.key != NULL && !found); i++)
-  {
-    found = (key_len == entry.key_len) && (memcmp(key, entry.key, key_len) == 0);
-
-    idx = (original_idx + i * i) % map_size;
-    entry = map->entries[idx];
-  }
-
-  return found * entry.value;
 }
 
 static uint32_t atoui(const char *str, const char **const endptr)
@@ -234,99 +140,13 @@ static uint32_t atoui(const char *str, const char **const endptr)
     str++;
   }
 
-  (void)(endptr && (*endptr = str));
+  if (LIKELY(endptr)) //TODO branchless
+    *endptr = str;
+
   return result;
 }
 
 static inline uint32_t mul10(uint32_t n)
 {
   return (n << 3) + (n << 1);
-}
-
-static void strtolower(char *str, uint16_t len)
-{
-  uint8_t misaligned_bytes = align_forward(str);
-  misaligned_bytes -= (misaligned_bytes > len) * (misaligned_bytes - len);
-
-  while (UNLIKELY(misaligned_bytes--))
-  {
-    const char c = *str;
-    *str++ = c | (((uint8_t)(c - 'A') <= ('Z' - 'A')) << 5);
-    len--;
-  }
-
-#ifdef __AVX512F__
-  while (LIKELY(len >= 64))
-  {
-    __m512i chunk = _mm512_load_si512((__m512i *)str);
-
-    const __m512i shifted = _mm512_xor_si512(chunk, _512_vec_A_minus_1);
-    const __mmask64 cmp_mask = _mm512_cmple_epi8_mask(shifted, _512_vec_case_range);
-    const __m512i add_mask = _mm512_maskz_mov_epi8(cmp_mask, _512_add_mask);
-
-    chunk = _mm512_add_epi8(chunk, add_mask);
-    _mm512_stream_si512((__m512i *)str, chunk);
-
-    str += 64;
-    len -= 64;
-  }
-#endif
-
-#ifdef __AVX2__  
-  while (LIKELY(len >= 32))
-  {
-    __m256i chunk = _mm256_load_si256((__m256i *)str);
-
-    const __m256i shifted = _mm256_xor_si256(chunk, _256_vec_A_minus_1);
-    const __m256i cmp_mask = _mm256_cmpgt_epi8(_256_vec_case_range, shifted);
-    const __m256i add_mask = _mm256_and_si256(cmp_mask, _256_add_mask);
-
-    chunk = _mm256_add_epi8(chunk, add_mask);
-
-    _mm256_stream_si256((__m256i *)str, chunk);
-
-    str += 32;
-    len -= 32;
-  }
-#endif
-
-#ifdef __SSE2__
-  while (LIKELY(len >= 16))
-  {
-    __m128i chunk = _mm_load_si128((__m128i *)str);
-
-    const __m128i shifted = _mm_xor_si128(chunk, _128_vec_A_minus_1);
-    const __m128i cmp_mask = _mm_cmpgt_epi8(_128_vec_case_range, shifted);
-    const __m128i add_mask = _mm_and_si128(cmp_mask, _128_add_mask);
-
-    chunk = _mm_add_epi8(chunk, add_mask);
-    _mm_stream_si128((__m128i *)str, chunk);
-
-    str += 16;
-    len -= 16;
-  }
-#endif
-
-  constexpr uint64_t all_bytes = 0x0101010101010101ULL;
-
-  while (LIKELY(len >= 8))
-  {
-    const uint64_t octets = *(uint64_t *)str;
-    const uint64_t heptets = octets & (0x7F * all_bytes);
-    const uint64_t is_gt_Z = heptets + (0x7F - 'Z') * all_bytes;
-    const uint64_t is_ge_A = heptets + (0x80 - 'A') * all_bytes;
-    const uint64_t is_ascii = ~octets & (0x80 * all_bytes);
-    const uint64_t is_upper = is_ascii & (is_ge_A ^ is_gt_Z);
-
-    *(uint64_t *)str = octets | (is_upper >> 2);
-
-    str += 8;
-    len -= 8;
-  }
-
-  while (LIKELY(len--))
-  {
-    const char c = *str;
-    *str++ = c | (((uint8_t)(c - 'A') <= ('Z' - 'A')) << 5);
-  }
 }

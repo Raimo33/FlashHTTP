@@ -62,10 +62,8 @@ char response_buffer[4096] = {0};
 const uint32_t len = read(sockfd, buffer, sizeof(buffer));
 
 http_header_t headers[HEADER_MAP_CAPACITY(7)] = {0};
-http_response_t response = { .headers = headers, .headers_capacity = ARR_SIZE(headers) };
+http_response_t response = { .headers = headers, .headers_count = ARR_SIZE(headers) };
 const uint32_t len = http1_deserialize(buffer, sizeof(buffer), &response);
-
-const char *const content_length_header = http1_get_header(&response, "content-length", STR_LEN("content-length"));
 
 /*...*/
 ```

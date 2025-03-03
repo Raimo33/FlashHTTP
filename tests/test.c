@@ -5,7 +5,7 @@ Creator: Claudio Raimondi
 Email: claudio.raimondi@pm.me                                                   
 
 created at: 2025-02-10 21:08:13                                                 
-last edited: 2025-03-02 22:55:24                                                
+last edited: 2025-03-03 20:58:12                                                
 
 ================================================================================*/
 
@@ -48,33 +48,6 @@ static bool compare_file(int fd, const char *expected_buffer, const uint32_t exp
     total_read += bytes_read;
   }
   
-  return true;
-}
-
-
-static void print_map(const http_header_map_t *map)
-{
-  for (uint16_t i = 0; i < map->size; i++)
-  {
-    if (map->entries[i].key != NULL)
-      printf("%s: %s\n", map->entries[i].key, map->entries[i].value);
-  }
-}
-
-static bool compare_response_headers(const http_header_map_t *response_headers, const http_header_t *expected_headers, const uint16_t headers_count)
-{
-  print_map(response_headers);
-
-  for (uint16_t i = 0; i < headers_count; i++)
-  {
-    const char *header = header_map_get(response_headers, expected_headers[i].key, expected_headers[i].key_len);
-    if (header == NULL)
-      return false;
-
-    if (memcmp(header, expected_headers[i].value, expected_headers[i].value_len) != 0)
-      return false;
-  }
-
   return true;
 }
 
@@ -488,15 +461,15 @@ static char *test_deserialize_normal_message(void)
     "</html>";
   const uint32_t expected_len = STR_LEN(buffer) - STR_LEN(expected_body);
 
-  http_header_t headers[HEADER_MAP_CAPACITY(7)] = {0};
-  http_response_t response = { .headers.entries = headers, .headers.size = ARR_SIZE(headers) };
+  http_header_t headers[ARR_SIZE(expected_headers)] = {0};
+  http_response_t response = { .headers = headers, .headers_count = ARR_SIZE(headers) };
   const uint32_t len = http1_deserialize(buffer, sizeof(buffer), &response);
 
   mu_assert("error: deserialize normal message: wrong length", len == expected_len);
   mu_assert("error: deserialize normal message: wrong status code", response.status_code == expected_status_code);
   mu_assert("error: deserialize normal message: wrong reason phrase", memcmp(response.reason_phrase, expected_reason_phrase, 2) == 0);
   mu_assert("error: deserialize normal message: wrong headers count", response.headers_count == 7);
-  mu_assert("error: deserialize normal message: wrong headers", compare_response_headers(&response.headers, expected_headers, 7));
+  mu_assert("error: deserialize normal message: wrong headers", memcmp(response.headers, expected_headers, sizeof(expected_headers)) == 0);
   mu_assert("error: deserialize normal message: wrong body", memcmp(response.body, expected_body, sizeof(expected_body)) == 0);
 
   return 0;
@@ -521,15 +494,18 @@ static char *test_deserialize_duplicate_headers(void)
   const char expected_body[] = "This is the body of the response";
   const uint32_t expected_len = STR_LEN(buffer) - STR_LEN(expected_body);
 
-  http_header_t headers[HEADER_MAP_CAPACITY(2)] = {0};
-  http_response_t response = { .headers.entries = headers, .headers.size = ARR_SIZE(headers) };
+  http_header_t headers[ARR_SIZE(expected_headers)] = {0};
+  http_response_t response = { .headers = headers, .headers_count = ARR_SIZE(headers) };
   const uint32_t len = http1_deserialize(buffer, sizeof(buffer), &response);
+
+  printf("headers count: %d\n", response.headers_count);
+  printf("expected headers count: %d\n", 2);
 
   mu_assert("error: deserialize duplicate headers: wrong length", len == expected_len);
   mu_assert("error: deserialize duplicate headers: wrong status code", response.status_code == expected_status_code);
   mu_assert("error: deserialize duplicate headers: wrong reason phrase", memcmp(response.reason_phrase, expected_reason_phrase, 2) == 0);
   mu_assert("error: deserialize duplicate headers: wrong headers count", response.headers_count == 2);
-  mu_assert("error: deserialize duplicate headers: wrong headers", compare_response_headers(&response.headers, expected_headers, 2));
+  mu_assert("error: deserialize duplicate headers: wrong headers", memcmp(response.headers, expected_headers, sizeof(expected_headers)) == 0);
   mu_assert("error: deserialize duplicate headers: wrong body", memcmp(response.body, expected_body, sizeof(expected_body)) == 0);
 
   return 0;

@@ -18,12 +18,6 @@ typedef struct
 
 typedef struct
 {
-  http_header_t *entries;
-  uint16_t size;
-} http_header_map_t;
-
-typedef struct
-{
   http_method_t method;
   const char *path;
   const uint16_t path_len;
@@ -39,7 +33,7 @@ typedef struct
   uint16_t status_code;
   const char *reason_phrase;
   uint16_t reason_phrase_len;
-  http_header_map_t headers;
+  http_header_t *headers;
   uint16_t headers_count;
   const char *body;
 } http_response_t;
