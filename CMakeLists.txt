@@ -25,7 +25,7 @@ set(FLASHTTP_PUBLIC_HEADERS
 )
 
 set(FLASHTTP_COMPILE_OPTIONS
-  -Wall -Wextra -Werror -Wpedantic -g #TODO remove
+  -Wall -Wextra -Werror -Wpedantic
   -fwrapv -fno-strict-aliasing -Ofast -march=native -flto
   -fno-semantic-interposition -fno-stack-protector -fno-plt 
   -fno-asynchronous-unwind-tables -funroll-loops -fomit-frame-pointer

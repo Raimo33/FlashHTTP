@@ -7,11 +7,9 @@ Thy're are performed on the static library compiled following the [installation 
   - The benchmarks were run using only aligned memory, mostly static, with exception for the actual random strings.
   - For write operations, `/dev/null` was used as the output file. This is to not factor in external factors such as disk speed, buffering, blocking.
 
-## Deserialization
-  ![Deserialization](../images/deserialize.png)
+## HTTP1
 
-## Serialization
-  ![Serialization](../images/serialize.png)
+![HTTP1](/images/benchmarks/http1.png)
 
 ## Run your own benchmarks
 
@@ -20,4 +18,4 @@ To run your own benchmarks you can follow the steps below:
   - Compile the library as described in the [installation guide](installation.md)
   - Compile the benchmark target: ```cmake --build . --target benchmark```
   - Run the benchmark executable: ```./benchmark```
-  - Generate a plot with the results: ```python3 ./benchmarks/plot.py *.csv```
+  - Generate a plot with the results: ```python3 ./benchmarks/plot.py 

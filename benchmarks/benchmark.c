@@ -5,7 +5,7 @@ Creator: Claudio Raimondi
 Email: claudio.raimondi@pm.me                                                   
 
 created at: 2025-02-14 17:53:51                                                 
-last edited: 2025-03-04 18:41:41                                                
+last edited: 2025-03-04 21:20:33                                                
 
 ================================================================================*/
 
@@ -19,8 +19,8 @@ last edited: 2025-03-04 18:41:41
 #include <unistd.h>
 #include <errno.h>
 
-#define N_ITERATIONS 4
-#define N_SAMPLES 196
+#define N_ITERATIONS 100'000
+#define N_SAMPLES 10'000
 #define MEAN_PATH_LEN 15
 #define MAX_PATH_LEN 256
 #define MEAN_HEADER_KEY_LEN 10
@@ -192,9 +192,9 @@ static void serialize_write(http_request_t *requests)
 {  
   uint64_t start, end;
   uint32_t aux;
+  uint64_t total_cycles = 0;
 
   const int32_t fd = open_p("/dev/null", O_WRONLY, 0);
-  uint64_t total_cycles = 0;
 
   printf("iterating http1_serialize_write() with %d samples %d times\n", N_SAMPLES, N_ITERATIONS);
 
@@ -202,16 +202,17 @@ static void serialize_write(http_request_t *requests)
   {
     http_request_t request = requests[i];
 
-    start = __rdtscp(&aux);
     for (uint32_t j = 0; j < N_ITERATIONS; j++)
+    {
+      start = __rdtscp(&aux);
       http1_serialize_write(fd, &request);
-    end = __rdtscp(&aux);
+      end = __rdtscp(&aux);
 
-    const uint64_t average_cycles = (end - start) / N_ITERATIONS;
-    total_cycles += average_cycles;
+      total_cycles += (end - start);
+    }
   }
 
-  printf("serialize_write(): avg CPU cycles: %lu\n", total_cycles / N_SAMPLES);
+  printf("serialize_write(): avg CPU cycles: %lu\n", total_cycles / N_SAMPLES / N_ITERATIONS);
 
   close(fd);
 }
@@ -220,10 +221,10 @@ static void serialize_and_write(http_request_t *requests)
 {
   uint64_t start, end;
   uint32_t aux;
+  uint64_t total_cycles = 0;
 
   char buffer[BUFFER_SIZE] ALIGNED(ALIGNMENT) = {0};
   const int32_t fd = open_p("/dev/null", O_WRONLY, 0);
-  uint64_t total_cycles = 0;
 
   printf("iterating http1_serialize_and_write() with %d samples %d times\n", N_SAMPLES, N_ITERATIONS);
 
@@ -231,19 +232,18 @@ static void serialize_and_write(http_request_t *requests)
   {
     http_request_t request = requests[i];
 
-    start = __rdtscp(&aux);
     for (uint32_t j = 0; j < N_ITERATIONS; j++)
     {
+      start = __rdtscp(&aux);
       const uint32_t len = http1_serialize(buffer, &request);
       write(fd, buffer, len);
-    }
-    end = __rdtscp(&aux);
+      end = __rdtscp(&aux);
 
-    const uint64_t average_cycles = (end - start) / N_ITERATIONS;
-    total_cycles += average_cycles;
+      total_cycles += (end - start);
+    }
   }
 
-  printf("serialize_and_write(): avg CPU cycles: %lu\n", total_cycles / N_SAMPLES);
+  printf("serialize_and_write(): avg CPU cycles: %lu\n", total_cycles / N_SAMPLES / N_ITERATIONS);
 
   close(fd);
 }
@@ -252,27 +252,30 @@ static void deserialize(char **buffers)
 {
   uint64_t start, end;
   uint32_t aux;
-
-  http_header_t headers[MAX_HEADERS_COUNT] = {0};
-  http_response_t response = { .headers = headers, .headers_count = MAX_HEADERS_COUNT };
   uint64_t total_cycles = 0;
 
+  http_header_t headers[MAX_HEADERS_COUNT] ALIGNED(ALIGNMENT);
+  http_response_t response ALIGNED(ALIGNMENT) = { .headers = headers, .headers_count = MAX_HEADERS_COUNT };
+  
   printf("iterating http1_deserialize() with %d samples %d times\n", N_SAMPLES, N_ITERATIONS);
-
+  
   for (uint16_t i = 0; i < N_SAMPLES; i++)
   {
-    char *buffer = buffers[i];
+    char buffer[BUFFER_SIZE] ALIGNED(ALIGNMENT);
 
-    start = __rdtscp(&aux);
     for (uint32_t j = 0; j < N_ITERATIONS; j++)
-      http1_deserialize(buffer, sizeof(buffer), &response);
-    end = __rdtscp(&aux);
-    
-    const uint64_t average_cycles = (end - start) / N_ITERATIONS;
-    total_cycles += average_cycles;
+    {
+      memcpy(buffer, buffers[i], BUFFER_SIZE);
+      
+      start = __rdtscp(&aux);
+      http1_deserialize(buffer, BUFFER_SIZE, &response);
+      end = __rdtscp(&aux);
+      
+      total_cycles += (end - start);
+    }
   }
 
-  printf("deserialize(): avg CPU cycles: %lu\n", total_cycles / N_SAMPLES);
+  printf("deserialize(): avg CPU cycles: %lu\n", total_cycles / N_SAMPLES / N_ITERATIONS);
 }
 
 static char *generate_random_string(const char *charset, const uint8_t charset_len, const uint32_t string_len)

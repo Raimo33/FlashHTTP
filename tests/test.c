@@ -5,7 +5,7 @@ Creator: Claudio Raimondi
 Email: claudio.raimondi@pm.me                                                   
 
 created at: 2025-02-10 21:08:13                                                 
-last edited: 2025-03-04 18:41:41                                                
+last edited: 2025-03-04 21:20:33                                                
 
 ================================================================================*/
 
@@ -91,6 +91,7 @@ static char *test_deserialize_missing_header_value(void);
 static char *test_deserialize_reason_phrase_too_long(void);
 static char *test_deserialize_header_key_too_long(void);
 static char *test_deserialize_header_value_too_long(void);
+//TODO tests with \r in body and \n
 
 int main(void)
 {
