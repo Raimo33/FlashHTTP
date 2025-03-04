@@ -5,7 +5,7 @@ Creator: Claudio Raimondi
 Email: claudio.raimondi@pm.me                                                   
 
 created at: 2025-02-10 21:08:13                                                 
-last edited: 2025-03-04 09:24:11                                                
+last edited: 2025-03-04 12:41:28                                                
 
 ================================================================================*/
 
@@ -139,7 +139,7 @@ static char *all_tests(void)
 
 static char *test_serialize_normal_message(void)
 {
-  const http_header_t headers[] = {
+  http_header_t headers[] = {
     { .key = "Host",                      .value = "example.com",                       .key_len = 4,  .value_len = 11 },
     { .key = "User-Agent",                .value = "Mozilla/5.0",                       .key_len = 10, .value_len = 11 },
     { .key = "Accept",                    .value = "text/html",                         .key_len = 6,  .value_len = 9 },
@@ -153,9 +153,9 @@ static char *test_serialize_normal_message(void)
     { .key = "Sec-Fetch-Site",            .value = "same-origin",                       .key_len = 14, .value_len = 11 },
     { .key = "Sec-Fetch-User",            .value = "?1",                                .key_len = 14, .value_len = 2 }
   };
-  const char body[] = "This is the body of the request";
+  char body[] = "This is the body of the request";
   const http_request_t request = {
-    .method = GET,
+    .method = HTTP_GET,
     .path = "/example/path/resource",
     .path_len = 22,
     .version = HTTP_1_1,
@@ -193,9 +193,9 @@ static char *test_serialize_normal_message(void)
 
 static char *test_serialize_no_headers(void)
 {
-  const char body[] = "This is the body of the request";
+  char body[] = "This is the body of the request";
   const http_request_t request = {
-    .method = GET,
+    .method = HTTP_GET,
     .path = "/example/path/resource",
     .path_len = 22,
     .version = HTTP_1_1,
@@ -219,11 +219,11 @@ static char *test_serialize_no_headers(void)
 
 static char *test_serialize_no_body(void)
 {
-  const http_header_t headers[] = {
+  http_header_t headers[] = {
     { .key = "Host", .value = "example.com", .key_len = 4, .value_len = 11 }
   };
   const http_request_t request = {
-    .method = GET,
+    .method = HTTP_GET,
     .path = "/example/path/resource",
     .path_len = 22,
     .version = HTTP_1_1,
@@ -248,7 +248,7 @@ static char *test_serialize_no_body(void)
 static char *test_serialize_no_headers_no_body(void)
 {
   const http_request_t request = {
-    .method = GET,
+    .method = HTTP_GET,
     .path = "/example/path/resource",
     .path_len = 22,
     .version = HTTP_1_1
@@ -269,7 +269,7 @@ static char *test_serialize_no_headers_no_body(void)
 
 static char *test_serialize_write_normal_message(void)
 {
-  const http_header_t headers[] = {
+  http_header_t headers[] = {
     { .key = "Host",                      .value = "example.com",                       .key_len = 4,  .value_len = 11 },
     { .key = "User-Agent",                .value = "Mozilla/5.0",                       .key_len = 10, .value_len = 11 },
     { .key = "Accept",                    .value = "text/html",                         .key_len = 6,  .value_len = 9 },
@@ -283,9 +283,9 @@ static char *test_serialize_write_normal_message(void)
     { .key = "Sec-Fetch-Site",            .value = "same-origin",                       .key_len = 14, .value_len = 11 },
     { .key = "Sec-Fetch-User",            .value = "?1",                                .key_len = 14, .value_len = 2 }
   };
-  const char body[] = "This is the body of the request";
+  char body[] = "This is the body of the request";
   const http_request_t request = {
-    .method = GET,
+    .method = HTTP_GET,
     .path = "/example/path/resource",
     .path_len = 22,
     .version = HTTP_1_1,
@@ -328,9 +328,9 @@ static char *test_serialize_write_normal_message(void)
 
 static char *test_serialize_write_no_headers(void)
 {
-  const char body[] = "This is the body of the request";
+  char body[] = "This is the body of the request";
   const http_request_t request = {
-    .method = GET,
+    .method = HTTP_GET,
     .path = "/example/path/resource",
     .path_len = 22,
     .version = HTTP_1_1,
@@ -359,11 +359,11 @@ static char *test_serialize_write_no_headers(void)
 
 static char *test_serialize_write_no_body(void)
 {
-  const http_header_t headers[] = {
+  http_header_t headers[] = {
     { .key = "Host", .value = "example.com", .key_len = 4, .value_len = 11 }
   };
   const http_request_t request = {
-    .method = GET,
+    .method = HTTP_GET,
     .path = "/example/path/resource",
     .path_len = 22,
     .version = HTTP_1_1,
@@ -393,7 +393,7 @@ static char *test_serialize_write_no_body(void)
 static char *test_serialize_write_no_headers_no_body(void)
 {
   const http_request_t request = {
-    .method = GET,
+    .method = HTTP_GET,
     .path = "/example/path/resource",
     .path_len = 22,
     .version = HTTP_1_1
@@ -430,9 +430,9 @@ static char *test_serialize_write_too_many_headers(void)
     };
   }
 
-  const char body[] = "This is the body of the request";
+  char body[] = "This is the body of the request";
   const http_request_t request = {
-    .method = GET,
+    .method = HTTP_GET,
     .path = "/example/path/resource",
     .path_len = 22,
     .version = HTTP_1_1,

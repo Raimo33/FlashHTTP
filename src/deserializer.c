@@ -5,7 +5,7 @@ Creator: Claudio Raimondi
 Email: claudio.raimondi@pm.me                                                   
 
 created at: 2025-02-11 12:37:26                                                 
-last edited: 2025-03-04 09:24:11                                                
+last edited: 2025-03-04 12:41:28                                                
 
 ================================================================================*/
 
@@ -61,7 +61,7 @@ static uint16_t deserialize_status_code(const char *buffer, const char *const bu
 
 static uint16_t deserialize_reason_phrase(char *buffer, UNUSED const char *const buffer_end, http_response_t *const restrict response)
 {
-  const char *const buffer_start = buffer;
+  char *const buffer_start = buffer;
 
   buffer = rawmemchr(buffer, '\r');
   *buffer = '\0';
@@ -101,7 +101,7 @@ static uint16_t deserialize_headers(char *restrict buffer, const char *const buf
     buffer += strspn(buffer, " \t");
     const bool valid_key = (key_len != 0) & (key_len <= UINT16_MAX);
 
-    const char *const value = buffer;
+    char *const value = buffer;
     buffer = rawmemchr(buffer, '\r');
 
     uint32_t value_len = buffer - value;

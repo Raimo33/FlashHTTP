@@ -5,7 +5,7 @@ Creator: Claudio Raimondi
 Email: claudio.raimondi@pm.me                                                   
 
 created at: 2025-02-14 17:53:51                                                 
-last edited: 2025-03-04 12:17:51                                                
+last edited: 2025-03-04 12:41:28                                                
 
 ================================================================================*/
 
@@ -79,15 +79,15 @@ int32_t main(void)
   }
   
   {
-    http_request_t *request_structs = malloc_p(N_SAMPLES, sizeof(http_request_t));
+    http_request_t request_structs[N_SAMPLES];
     
     fill_request_structs(request_structs, path_lens, header_key_lens, header_value_lens, body_lens, headers_counts);
     
     serialize(request_structs);
     serialize_write(request_structs);
+    serialize_and_write(request_structs);
 
     free_request_structs(request_structs);
-    free(request_structs);
   }
 
   {
@@ -98,7 +98,6 @@ int32_t main(void)
     deserialize(response_buffers);
 
     free_response_buffers(response_buffers);
-    free(response_buffers);
   }
 }
 

@@ -5,7 +5,7 @@ Creator: Claudio Raimondi
 Email: claudio.raimondi@pm.me                                                   
 
 created at: 2025-02-11 12:37:26                                                 
-last edited: 2025-03-04 12:17:51                                                
+last edited: 2025-03-04 12:41:28                                                
 
 ================================================================================*/
 
@@ -220,8 +220,10 @@ static inline uint32_t serialize_body(char *restrict buffer, const char *restric
 {
   const char *const buffer_start = buffer;
 
-  memcpy(buffer, body, body_len); //TODO body can be NULL, check if UB
-  buffer += body_len;
+  const uint32_t len = body_len * (body != NULL);
+
+  memcpy(buffer, body, len);
+  buffer += len;
 
   return buffer - buffer_start;
 }
