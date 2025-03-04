@@ -27,7 +27,7 @@ const http_header_t headers[] = {
   };
 const char body[] = "This is the body of the request";
 const http_request_t request = {
-  .method = GET,
+  .method = HTTP_GET,
   .path = "/example/path/resource",
   .path_len = STR_LEN("/example/path/resource"),
   .version = HTTP_1_1,

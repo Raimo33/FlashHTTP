@@ -5,7 +5,7 @@ Creator: Claudio Raimondi
 Email: claudio.raimondi@pm.me                                                   
 
 created at: 2025-02-11 12:37:26                                                 
-last edited: 2025-03-03 21:42:14                                                
+last edited: 2025-03-04 12:17:51                                                
 
 ================================================================================*/
 
@@ -44,26 +44,26 @@ static inline uint32_t serialize_body(char *restrict buffer, const char *restric
 static inline uint8_t vectorize_body(struct iovec *restrict iov, const char *restrict body, const uint32_t body_len);
 
 constexpr char methods_str[][sizeof(uint64_t)] ALIGNED(64) = {
-  [GET] = "GET",
-  [HEAD] = "HEAD",
-  [POST] = "POST",
-  [PUT] = "PUT",
-  [DELETE] = "DELETE",
-  [OPTIONS] = "OPTIONS",
-  [TRACE] = "TRACE",
-  [PATCH] = "PATCH",
-  [CONNECT] = "CONNECT"
+  [HTTP_GET] = "GET",
+  [HTTP_HEAD] = "HEAD",
+  [HTTP_POST] = "POST",
+  [HTTP_PUT] = "PUT",
+  [HTTP_DELETE] = "DELETE",
+  [HTTP_OPTIONS] = "OPTIONS",
+  [HTTP_TRACE] = "TRACE",
+  [HTTP_PATCH] = "PATCH",
+  [HTTP_CONNECT] = "CONNECT"
 };
 constexpr uint8_t methods_len[] = {
-  [GET] = STR_LEN("GET"),
-  [HEAD] = STR_LEN("HEAD"),
-  [POST] = STR_LEN("POST"),
-  [PUT] = STR_LEN("PUT"),
-  [DELETE] = STR_LEN("DELETE"),
-  [OPTIONS] = STR_LEN("OPTIONS"),
-  [TRACE] = STR_LEN("TRACE"),
-  [PATCH] = STR_LEN("PATCH"),
-  [CONNECT] = STR_LEN("CONNECT")
+  [HTTP_GET] = STR_LEN("GET"),
+  [HTTP_HEAD] = STR_LEN("HEAD"),
+  [HTTP_POST] = STR_LEN("POST"),
+  [HTTP_PUT] = STR_LEN("PUT"),
+  [HTTP_DELETE] = STR_LEN("DELETE"),
+  [HTTP_OPTIONS] = STR_LEN("OPTIONS"),
+  [HTTP_TRACE] = STR_LEN("TRACE"),
+  [HTTP_PATCH] = STR_LEN("PATCH"),
+  [HTTP_CONNECT] = STR_LEN("CONNECT")
 };
 
 constexpr char versions_str[][sizeof(uint64_t)] ALIGNED(64) = {
