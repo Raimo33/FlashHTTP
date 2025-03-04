@@ -5,7 +5,7 @@ Creator: Claudio Raimondi
 Email: claudio.raimondi@pm.me                                                   
 
 created at: 2025-02-10 21:08:13                                                 
-last edited: 2025-03-03 21:42:14                                                
+last edited: 2025-03-04 09:24:11                                                
 
 ================================================================================*/
 
@@ -79,6 +79,18 @@ static char *test_serialize_write_too_many_headers(void);
 
 static char *test_deserialize_normal_message(void);
 static char *test_deserialize_duplicate_headers(void);
+static char *test_deserialize_no_headers(void);
+static char *test_deserialize_no_body(void);
+static char *test_deserialize_no_headers_no_body(void);
+static char *test_deserialize_missing_status_code(void);
+static char *test_deserialize_missing_reason_phrase(void);
+static char *test_deserialize_too_many_headers(void);
+static char *test_deserialize_missing_colon(void);
+static char *test_deserialize_missing_header_key(void);
+static char *test_deserialize_missing_header_value(void);
+static char *test_deserialize_reason_phrase_too_long(void);
+static char *test_deserialize_header_key_too_long(void);
+static char *test_deserialize_header_value_too_long(void);
 
 int main(void)
 {
@@ -109,6 +121,18 @@ static char *all_tests(void)
 
   mu_run_test(test_deserialize_normal_message);
   mu_run_test(test_deserialize_duplicate_headers);
+  mu_run_test(test_deserialize_no_headers);
+  mu_run_test(test_deserialize_no_body);
+  mu_run_test(test_deserialize_no_headers_no_body);
+  mu_run_test(test_deserialize_missing_status_code);
+  mu_run_test(test_deserialize_missing_reason_phrase);
+  mu_run_test(test_deserialize_too_many_headers);
+  mu_run_test(test_deserialize_missing_colon);
+  mu_run_test(test_deserialize_missing_header_key);
+  mu_run_test(test_deserialize_missing_header_value);
+  mu_run_test(test_deserialize_reason_phrase_too_long);
+  mu_run_test(test_deserialize_header_key_too_long);
+  mu_run_test(test_deserialize_header_value_too_long);
 
   return 0;
 }
@@ -423,7 +447,7 @@ static char *test_serialize_write_too_many_headers(void)
     return strerror(errno);
   int32_t len = http1_serialize_write(fds[1], &request);
 
-  mu_assert("error: serialize write too many headers: wrong length", len == -1);
+  mu_assert("error: serialize write too many headers: should fail", len == -1);
 
   close(fds[0]);
   close(fds[1]);
@@ -520,6 +544,243 @@ static char *test_deserialize_duplicate_headers(void)
   mu_assert("error: deserialize duplicate headers: wrong headers count", response.headers_count == ARR_SIZE(expected_headers));
   mu_assert("error: deserialize duplicate headers: wrong headers", compare_headers(response.headers, expected_headers, response.headers_count));
   mu_assert("error: deserialize duplicate headers: wrong body", memcmp(response.body, expected_body, sizeof(expected_body)) == 0);
+
+  return 0;
+}
+
+static char *test_deserialize_no_headers(void)
+{
+  char buffer[] =
+    "HTTP/1.1 200 OK\r\n"
+    "\r\n"
+    "This is the body of the response";
+  const uint16_t expected_status_code = 200;
+  const char expected_reason_phrase[] = "OK";
+  const char expected_body[] = "This is the body of the response";
+  const uint32_t expected_len = STR_LEN(buffer) - STR_LEN(expected_body);
+
+  http_response_t response = {0};
+  const uint32_t len = http1_deserialize(buffer, sizeof(buffer), &response);
+
+  mu_assert("error: deserialize no headers: wrong length", len == expected_len);
+  mu_assert("error: deserialize no headers: wrong status code", response.status_code == expected_status_code);
+  mu_assert("error: deserialize no headers: wrong reason phrase", memcmp(response.reason_phrase, expected_reason_phrase, 2) == 0);
+  mu_assert("error: deserialize no headers: wrong headers count", response.headers_count == 0);
+  mu_assert("error: deserialize no headers: wrong body", memcmp(response.body, expected_body, sizeof(expected_body)) == 0);
+
+  return 0;
+}
+
+static char *test_deserialize_no_body(void)
+{
+  char buffer[] =
+    "HTTP/1.1 200 OK\r\n"
+    "Content-Type: text/html; charset=UTF-8\r\n"
+    "Content-Length: 1234\r\n"
+    "\r\n";
+  const uint16_t expected_status_code = 200;
+  const char expected_reason_phrase[] = "OK";
+  const http_header_t expected_headers[] = {
+    { .key = "Content-Type",   .value = "text/html; charset=UTF-8", .key_len = 12, .value_len = 24 },
+    { .key = "Content-Length", .value = "1234",                     .key_len = 14, .value_len = 4 }
+  };
+  const uint32_t expected_len = STR_LEN(buffer);
+
+  http_header_t headers[ARR_SIZE(expected_headers)] = {0};
+  http_response_t response = { .headers = headers, .headers_count = ARR_SIZE(headers) };
+  const uint32_t len = http1_deserialize(buffer, sizeof(buffer), &response);
+
+  mu_assert("error: deserialize no body: wrong length", len == expected_len);
+  mu_assert("error: deserialize no body: wrong status code", response.status_code == expected_status_code);
+  mu_assert("error: deserialize no body: wrong reason phrase", memcmp(response.reason_phrase, expected_reason_phrase, 2) == 0);
+  mu_assert("error: deserialize no body: wrong headers count", response.headers_count == ARR_SIZE(expected_headers));
+  mu_assert("error: deserialize no body: wrong headers", compare_headers(response.headers, expected_headers, response.headers_count));
+  mu_assert("error: deserialize no body: wrong body", response.body == NULL || response.body[0] == '\0');
+
+  return 0;
+}
+
+static char *test_deserialize_no_headers_no_body(void)
+{
+  char buffer[] =
+    "HTTP/1.1 200 OK\r\n"
+    "\r\n";
+  const uint16_t expected_status_code = 200;
+  const char expected_reason_phrase[] = "OK";
+  const uint32_t expected_len = STR_LEN(buffer);
+
+  http_response_t response = {0};
+  const uint32_t len = http1_deserialize(buffer, sizeof(buffer), &response);
+
+  mu_assert("error: deserialize no headers no body: wrong length", len == expected_len);
+  mu_assert("error: deserialize no headers no body: wrong status code", response.status_code == expected_status_code);
+  mu_assert("error: deserialize no headers no body: wrong reason phrase", memcmp(response.reason_phrase, expected_reason_phrase, 2) == 0);
+  mu_assert("error: deserialize no headers no body: wrong headers count", response.headers_count == 0);
+  mu_assert("error: deserialize no headers no body: wrong body", response.body == NULL || response.body[0] == '\0');
+
+  return 0;
+}
+
+static char *test_deserialize_missing_status_code(void)
+{
+  char buffer[] =
+    "HTTP/1.1 OK\r\n"
+    "\r\n"
+    "This is the body of the response";
+  http_response_t response = {0};
+  const uint32_t len = http1_deserialize(buffer, sizeof(buffer), &response);
+
+  mu_assert("error: deserialize missing status code: should fail", len == 0);
+
+  return 0;
+}
+
+static char *test_deserialize_missing_reason_phrase(void)
+{
+  char buffer[] =
+    "HTTP/1.1 200\r\n"
+    "\r\n"
+    "This is the body of the response";
+  http_response_t response = {0};
+  const uint32_t len = http1_deserialize(buffer, sizeof(buffer), &response);
+
+  mu_assert("error: deserialize missing reason phrase: should fail", len == 0);
+
+  return 0;
+}
+
+static char *test_deserialize_too_many_headers(void)
+{
+  char buffer[] =
+    "HTTP/1.1 200 OK\r\n"
+    "Content-Type: text/html; charset=UTF-8\r\n"
+    "Content-Length: 1234\r\n"
+    "Connection: keep-alive\r\n"
+    "Server: Apache/2.4.41 (Unix)\r\n"
+    "Cache-Control: max-age=3600\r\n"
+    "ETag: \"abc123\"\r\n"
+    "Date: Mon, 01 Jan 2023 12:00:00 GMT\r\n"
+    "Content-Type: text/plain\r\n"
+    "Content-Length: 5678\r\n"
+    "\r\n"
+    "This is the body of the response";
+  http_response_t response = {0};
+  const uint32_t len = http1_deserialize(buffer, sizeof(buffer), &response);
+
+  mu_assert("error: deserialize too many headers 1: should fail", len == 0);
+
+  return 0;
+}
+
+static char *test_deserialize_missing_colon(void)
+{
+  char buffer[] =
+    "HTTP/1.1 200 OK\r\n"
+    "Content-Type text/html; charset=UTF-8\r\n"
+    "Content-Length 1234\r\n"
+    "\r\n"
+    "This is the body of the response";
+  http_response_t response = {0};
+  const uint32_t len = http1_deserialize(buffer, sizeof(buffer), &response);
+
+  mu_assert("error: deserialize missing colon: should fail", len == 0);
+
+  return 0;
+}
+
+static char *test_deserialize_missing_header_key(void)
+{
+  char buffer[] =
+    "HTTP/1.1 200 OK\r\n"
+    ": text/html; charset=UTF-8\r\n"
+    "Content-Length: 1234\r\n"
+    "\r\n"
+    "This is the body of the response";
+  http_response_t response = {0};
+  const uint32_t len = http1_deserialize(buffer, sizeof(buffer), &response);
+
+  mu_assert("error: deserialize missing header key: should fail", len == 0);
+
+  return 0;
+}
+
+static char *test_deserialize_missing_header_value(void)
+{
+  char buffer[] =
+    "HTTP/1.1 200 OK\r\n"
+    "Content-Type:\r\n"
+    "Content-Length: 1234\r\n"
+    "\r\n"
+    "This is the body of the response";
+  http_response_t response = {0};
+  const uint32_t len = http1_deserialize(buffer, sizeof(buffer), &response);
+
+  mu_assert("error: deserialize missing header value: should fail", len == 0);
+
+  return 0;
+}
+
+static char *test_deserialize_reason_phrase_too_long(void)
+{
+  char *buffer = malloc(UINT16_MAX * 2);
+  if (buffer == NULL)
+    return strerror(errno);
+
+  sprintf(buffer, "HTTP/1.1 200 ");
+  for (uint16_t i = 0; i < UINT16_MAX; i++)
+    strcat(buffer, "A");
+  strcat(buffer, "\r\n\r\n");
+
+  http_response_t response = {0};
+  const uint32_t len = http1_deserialize(buffer, UINT16_MAX * 2, &response);
+
+  free(buffer);
+
+  mu_assert("error: deserialize reason phrase too long: should fail", len == 0);
+
+  return 0;
+}
+
+static char *test_deserialize_header_key_too_long(void)
+{
+  char *buffer = malloc(UINT16_MAX * 2);
+  if (buffer == NULL)
+    return strerror(errno);
+
+  sprintf(buffer, "HTTP/1.1 200 OK\r\n");
+  for (uint32_t i = 0; i < UINT16_MAX + 1; i++)
+    strcat(buffer, "A");
+  strcat(buffer, ": value\r\n\r\n");
+
+  http_header_t headers[1] = {0};
+  http_response_t response = { .headers = headers, .headers_count = 1 };
+  const uint32_t len = http1_deserialize(buffer, UINT16_MAX * 2, &response);
+
+  free(buffer);
+
+  mu_assert("error: deserialize header key too long: should fail", len == 0);
+
+  return 0;
+}
+
+static char *test_deserialize_header_value_too_long(void)
+{
+  char *buffer = malloc(UINT16_MAX * 2);
+  if (buffer == NULL)
+    return strerror(errno);
+
+  sprintf(buffer, "HTTP/1.1 200 OK\r\nHeader: ");
+  for (uint32_t i = 0; i < UINT16_MAX + 1; i++)
+    strcat(buffer, "A");
+  strcat(buffer, "\r\n\r\n");
+
+  http_header_t headers[1] = {0};
+  http_response_t response = { .headers = headers, .headers_count = 1 };
+  const uint32_t len = http1_deserialize(buffer, UINT16_MAX * 2, &response);
+
+  free(buffer);
+
+  mu_assert("error: deserialize header value too long: should fail", len == 0);
 
   return 0;
 }

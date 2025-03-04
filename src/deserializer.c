@@ -5,7 +5,7 @@ Creator: Claudio Raimondi
 Email: claudio.raimondi@pm.me                                                   
 
 created at: 2025-02-11 12:37:26                                                 
-last edited: 2025-03-03 21:42:14                                                
+last edited: 2025-03-04 09:24:11                                                
 
 ================================================================================*/
 
@@ -39,7 +39,7 @@ uint32_t http1_deserialize(char *restrict buffer, const uint32_t buffer_size, ht
   error_occured |= (headers_len == 0);
   buffer += headers_len;
 
-  response->body = buffer;
+  response->body = (char *)((buffer < buffer_end) * (uintptr_t)buffer);
 
   return (buffer - buffer_start) * !error_occured;
 }
@@ -92,7 +92,7 @@ static uint16_t deserialize_headers(char *restrict buffer, const char *const buf
     char *const key = buffer;
     buffer = memchr(buffer, ':', buffer_end - buffer);
 
-    bool valid = (buffer != NULL) & (headers_count < max_headers) & (headers_count < UINT16_MAX);
+    bool valid = (buffer != NULL) & (headers_count < max_headers);
     if (UNLIKELY(!valid))
       return 0;
 

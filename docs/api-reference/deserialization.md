@@ -15,7 +15,7 @@ uint32_t http1_deserialize(char *restrict buffer, const uint32_t buffer_size, ht
 ```
 
 ### Description
-deserializes a http1 response in-place by replacing delimiters with `'\0'` and storing the pointers to the fields in the `response` struct.
+deserializes a http1 response in-place by replacing delimiters with `'\0'` and storing the pointers to the fields in the `response` struct. For the body, `response->body` will be set to the start of the body in the buffer or `NULL` if the buffer ends after the headers.
 
 ### Parameters
   - `buffer` - the buffer which contains the full serialized response
