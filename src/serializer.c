@@ -5,7 +5,7 @@ Creator: Claudio Raimondi
 Email: claudio.raimondi@pm.me                                                   
 
 created at: 2025-02-11 12:37:26                                                 
-last edited: 2025-03-04 12:41:28                                                
+last edited: 2025-03-04 18:41:41                                                
 
 ================================================================================*/
 
@@ -197,17 +197,30 @@ static uint16_t serialize_headers(char *restrict buffer, const http_header_t *re
   return buffer - buffer_start;
 }
 
+//TODO SIMD
 static uint16_t vectorize_headers(struct iovec *restrict iov, const http_header_t *restrict headers, const uint16_t headers_count)
 {
   const struct iovec *const iov_start = iov;
 
+#ifdef __AVX512F__
+
+#endif
+
+#ifdef __AVX2__
+
+#endif
+
+#ifdef __SSE2__
+
+#endif
+
   for (uint16_t i = 0; LIKELY(i < headers_count); i++)
   {
-    const http_header_t *header = &headers[i];
+    const http_header_t header = headers[i];
 
-    *iov++ = (struct iovec){(char *)header->key, header->key_len};
+    *iov++ = (struct iovec){(char *)header.key, header.key_len};
     *iov++ = (struct iovec){(char *)colon_space, sizeof(colon_space)};
-    *iov++ = (struct iovec){(char *)header->value, header->value_len};
+    *iov++ = (struct iovec){(char *)header.value, header.value_len};
     *iov++ = (struct iovec){(char *)clrf, sizeof(clrf)};
   }
 

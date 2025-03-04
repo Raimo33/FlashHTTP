@@ -5,7 +5,7 @@ Creator: Claudio Raimondi
 Email: claudio.raimondi@pm.me                                                   
 
 created at: 2025-02-10 21:08:13                                                 
-last edited: 2025-03-04 12:41:28                                                
+last edited: 2025-03-04 18:41:41                                                
 
 ================================================================================*/
 
@@ -133,6 +133,7 @@ static char *all_tests(void)
   mu_run_test(test_deserialize_reason_phrase_too_long);
   mu_run_test(test_deserialize_header_key_too_long);
   mu_run_test(test_deserialize_header_value_too_long);
+  //TODO tests with \r in body and \n
 
   return 0;
 }
@@ -625,6 +626,7 @@ static char *test_deserialize_missing_status_code(void)
 {
   char buffer[] =
     "HTTP/1.1 OK\r\n"
+    "Content-Type: text/html; charset=UTF-8\r\n"
     "\r\n"
     "This is the body of the response";
   http_response_t response = {0};
@@ -639,9 +641,11 @@ static char *test_deserialize_missing_reason_phrase(void)
 {
   char buffer[] =
     "HTTP/1.1 200\r\n"
+    "Content-Type: text/html; charset=UTF-8\r\n"
     "\r\n"
     "This is the body of the response";
-  http_response_t response = {0};
+  http_header_t headers[1] = {0};
+  http_response_t response = { .headers = headers, .headers_count = 1 };
   const uint32_t len = http1_deserialize(buffer, sizeof(buffer), &response);
 
   mu_assert("error: deserialize missing reason phrase: should fail", len == 0);
@@ -664,7 +668,8 @@ static char *test_deserialize_too_many_headers(void)
     "Content-Length: 5678\r\n"
     "\r\n"
     "This is the body of the response";
-  http_response_t response = {0};
+  http_header_t headers[8] = {0};
+  http_response_t response = { .headers = headers, .headers_count = 8 };
   const uint32_t len = http1_deserialize(buffer, sizeof(buffer), &response);
 
   mu_assert("error: deserialize too many headers 1: should fail", len == 0);
@@ -680,7 +685,8 @@ static char *test_deserialize_missing_colon(void)
     "Content-Length 1234\r\n"
     "\r\n"
     "This is the body of the response";
-  http_response_t response = {0};
+  http_header_t headers[2] = {0};
+  http_response_t response = { .headers = headers, .headers_count = 2 };
   const uint32_t len = http1_deserialize(buffer, sizeof(buffer), &response);
 
   mu_assert("error: deserialize missing colon: should fail", len == 0);
@@ -722,7 +728,7 @@ static char *test_deserialize_missing_header_value(void)
 
 static char *test_deserialize_reason_phrase_too_long(void)
 {
-  char *buffer = malloc(UINT16_MAX * 2);
+  char *buffer = calloc(UINT16_MAX * 2, sizeof(char));
   if (buffer == NULL)
     return strerror(errno);
 
@@ -743,7 +749,7 @@ static char *test_deserialize_reason_phrase_too_long(void)
 
 static char *test_deserialize_header_key_too_long(void)
 {
-  char *buffer = malloc(UINT16_MAX * 2);
+  char *buffer = calloc(UINT16_MAX * 2, sizeof(char));
   if (buffer == NULL)
     return strerror(errno);
 
@@ -765,7 +771,7 @@ static char *test_deserialize_header_key_too_long(void)
 
 static char *test_deserialize_header_value_too_long(void)
 {
-  char *buffer = malloc(UINT16_MAX * 2);
+  char *buffer = calloc(UINT16_MAX * 2, sizeof(char));
   if (buffer == NULL)
     return strerror(errno);
 

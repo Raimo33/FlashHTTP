@@ -5,7 +5,7 @@ Creator: Claudio Raimondi
 Email: claudio.raimondi@pm.me                                                   
 
 created at: 2025-02-11 12:37:26                                                 
-last edited: 2025-03-04 12:41:28                                                
+last edited: 2025-03-04 18:41:41                                                
 
 ================================================================================*/
 
@@ -14,10 +14,11 @@ last edited: 2025-03-04 12:41:28
 #include "common.h"
 #include "deserializer.h"
 
-static uint16_t deserialize_status_code(const char *buffer, const char *const buffer_end, http_response_t *const restrict response);
-static uint16_t deserialize_reason_phrase(char *buffer, const char *const buffer_end, http_response_t *const restrict response);
-static uint16_t deserialize_headers(char *restrict buffer, const char *const buffer_end, http_response_t *const restrict response);
-static uint32_t atoui(const char *str, const char **const endptr);
+static uint32_t deserialize_status_line(char *buffer, const char *const buffer_end, http_response_t *const restrict response);
+static uint16_t deserialize_status_code(char *buffer, const char *const line_end, http_response_t *const restrict response);
+static uint16_t deserialize_reason_phrase(char *buffer, const char *const line_end, http_response_t *const restrict response);
+static uint32_t deserialize_headers(char *restrict buffer, const char *const buffer_end, http_response_t *const restrict response);
+static uint32_t atoui(const char *str, char **endptr);
 static inline uint32_t mul10(uint32_t n);
 
 uint32_t http1_deserialize(char *restrict buffer, const uint32_t buffer_size, http_response_t *const restrict response)
@@ -25,50 +26,69 @@ uint32_t http1_deserialize(char *restrict buffer, const uint32_t buffer_size, ht
   const char *const buffer_start = buffer;
   const char *const buffer_end = buffer + buffer_size;
 
-  bool error_occured = false;
+  uint32_t parsed_bytes;
 
-  const uint16_t status_code_len = deserialize_status_code(buffer, buffer_end, response);
-  error_occured |= (status_code_len == 0);
-  buffer += status_code_len;
+  parsed_bytes = deserialize_status_line(buffer, buffer_end, response);
+  if (UNLIKELY(parsed_bytes == 0))
+    return 0;
+  buffer += parsed_bytes;
 
-  const uint16_t reason_phrase_len = deserialize_reason_phrase(buffer, buffer_end, response);
-  error_occured |= (reason_phrase_len == 0);
-  buffer += reason_phrase_len;
-
-  const uint16_t headers_len = deserialize_headers(buffer, buffer_end, response);
-  error_occured |= (headers_len == 0);
-  buffer += headers_len;
+  parsed_bytes = deserialize_headers(buffer, buffer_end, response);
+  if (UNLIKELY(parsed_bytes == 0))
+    return 0;
+  buffer += parsed_bytes;
 
   response->body = (char *)((buffer < buffer_end) * (uintptr_t)buffer);
 
-  return (buffer - buffer_start) * !error_occured;
+  return buffer - buffer_start;
 }
 
-static uint16_t deserialize_status_code(const char *buffer, const char *const buffer_end, http_response_t *const restrict response)
+static uint32_t deserialize_status_line(char *buffer, const char *const buffer_end, http_response_t *const restrict response)
+{
+  const char *const line_start = buffer;
+  const char *const line_end = memmem(buffer, buffer_end - buffer, "\r\n", STR_LEN("\r\n"));
+
+  uint32_t parsed_bytes;
+
+  parsed_bytes = deserialize_status_code(buffer, line_end, response);
+  if (UNLIKELY(parsed_bytes == 0))
+    return 0;
+  buffer += parsed_bytes;
+
+  parsed_bytes = deserialize_reason_phrase(buffer, line_end, response);
+  if (UNLIKELY(parsed_bytes == 0))
+    return 0;
+  buffer += parsed_bytes;
+
+  return buffer - line_start;
+}
+
+static uint16_t deserialize_status_code(char *buffer, const char *const line_end, http_response_t *const restrict response)
 {
   const char *const buffer_start = buffer;
   
-  const char *const space = memchr(buffer, ' ', buffer_end - buffer);
-  
+  const char *const space = memchr(buffer, ' ', line_end - buffer);
+
   const uint32_t status_code = atoui(space, &buffer);
   response->status_code = status_code;
-  buffer++;
 
   const bool valid = (status_code - 100) < 499;
 
   return (buffer - buffer_start) * valid;
 }
 
-static uint16_t deserialize_reason_phrase(char *buffer, UNUSED const char *const buffer_end, http_response_t *const restrict response)
+static uint16_t deserialize_reason_phrase(char *buffer, UNUSED const char *const line_end, http_response_t *const restrict response)
 {
   char *const buffer_start = buffer;
 
+  buffer += strspn(buffer, " \t");
+  char *const reason_phrase_start = buffer;
   buffer = rawmemchr(buffer, '\r');
   *buffer = '\0';
 
-  uint32_t reason_phrase_len = buffer - buffer_start;
+  uint32_t reason_phrase_len = buffer - reason_phrase_start;
 
-  response->reason_phrase = buffer_start;
+  response->reason_phrase = reason_phrase_start;
   response->reason_phrase_len = reason_phrase_len;
 
   buffer += STR_LEN("\r\n");
@@ -79,7 +99,7 @@ static uint16_t deserialize_reason_phrase(char *buffer, UNUSED const char *const
   return (buffer - buffer_start) * valid;
 }
 
-static uint16_t deserialize_headers(char *restrict buffer, const char *const buffer_end, http_response_t *const restrict response)
+static uint32_t deserialize_headers(char *restrict buffer, const char *const buffer_end, http_response_t *const restrict response)
 {
   const char *const buffer_start = buffer;
 
@@ -87,30 +107,29 @@ static uint16_t deserialize_headers(char *restrict buffer, const char *const buf
   http_header_t *headers = response->headers;
   uint16_t headers_count = 0;
 
-  while (LIKELY(*buffer != '\r'))
+  while (LIKELY(*(uint16_t *)buffer != *(uint16_t *)"\r\n"))
   {
     char *const key = buffer;
     buffer = memchr(buffer, ':', buffer_end - buffer);
-
-    bool valid = (buffer != NULL) & (headers_count < max_headers);
-    if (UNLIKELY(!valid))
+    bool valid_header = (buffer != NULL) & (headers_count < max_headers);
+    if (UNLIKELY(!valid_header))
       return 0;
-
     uint32_t key_len = buffer - key;
     *buffer++ = '\0';
     buffer += strspn(buffer, " \t");
     const bool valid_key = (key_len != 0) & (key_len <= UINT16_MAX);
 
     char *const value = buffer;
-    buffer = rawmemchr(buffer, '\r');
-
+    buffer = memmem(buffer, buffer_end - buffer, "\r\n", STR_LEN("\r\n"));
+    if (UNLIKELY(buffer == NULL))
+      return 0;
     uint32_t value_len = buffer - value;
     *buffer = '\0';
     buffer += STR_LEN("\r\n");
     const bool valid_value = (value_len != 0) & (value_len <= UINT16_MAX);
 
-    valid = valid_key & valid_value;
-    if (UNLIKELY(!valid))
+    valid_header = valid_key & valid_value;
+    if (UNLIKELY(!valid_header))
       return 0;
 
     *headers++ = (http_header_t) {
@@ -128,7 +147,7 @@ static uint16_t deserialize_headers(char *restrict buffer, const char *const buf
   return buffer - buffer_start;
 }
 
-static uint32_t atoui(const char *str, const char **const endptr)
+static uint32_t atoui(const char *str, char **endptr)
 {
   uint32_t result = 0;
 
@@ -144,7 +163,7 @@ static uint32_t atoui(const char *str, const char **const endptr)
   }
 
   if (LIKELY(endptr)) //TODO branchless
-    *endptr = str;
+    *endptr = (char *)str;
 
   return result;
 }

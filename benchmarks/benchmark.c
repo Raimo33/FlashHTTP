@@ -5,7 +5,7 @@ Creator: Claudio Raimondi
 Email: claudio.raimondi@pm.me                                                   
 
 created at: 2025-02-14 17:53:51                                                 
-last edited: 2025-03-04 12:41:28                                                
+last edited: 2025-03-04 18:41:41                                                
 
 ================================================================================*/
 
@@ -19,8 +19,8 @@ last edited: 2025-03-04 12:41:28
 #include <unistd.h>
 #include <errno.h>
 
-#define N_ITERATIONS 1'000'000
-#define N_SAMPLES 1000
+#define N_ITERATIONS 4
+#define N_SAMPLES 196
 #define MEAN_PATH_LEN 15
 #define MAX_PATH_LEN 256
 #define MEAN_HEADER_KEY_LEN 10
@@ -34,7 +34,7 @@ last edited: 2025-03-04 12:41:28
 #define MEAN_REASON_PHRASE_LEN 8
 #define MAX_REASON_PHRASE_LEN 64
 #define ALIGNMENT 64
-#define BUFFER_SIZE (20 + MAX_PATH_LEN + 2 * (MAX_HEADER_KEY_LEN + MAX_HEADER_VALUE_LEN + 5) + MAX_BODY_LEN)
+#define BUFFER_SIZE (20 + MAX_PATH_LEN + MAX_REASON_PHRASE_LEN + 2 * (MAX_HEADER_KEY_LEN + MAX_HEADER_VALUE_LEN + 5) + MAX_BODY_LEN)
 #define static_assert _Static_assert
 #define STR_LEN(str) sizeof(str) - 1
 #define ALIGNED(n) __attribute__((aligned(n)))
@@ -43,12 +43,13 @@ static void fill_request_structs(http_request_t *requests, uint16_t *path_lens, 
 static void fill_response_buffers(char **buffers, uint16_t *path_lens, uint16_t *header_key_lens, uint16_t *header_value_lens, uint32_t *body_lens, uint16_t *headers_counts);
 static void serialize(http_request_t *requests);
 static void serialize_write(http_request_t *requests);
+static void serialize_and_write(http_request_t *requests);
 static void deserialize(char **buffers);
-static char *generate_random_string(const char *charset, const uint8_t charset_len, const uint16_t median_len, const uint16_t max_len);
+static char *generate_random_string(const char *charset, const uint8_t charset_len, const uint32_t string_len);
 static double gaussian_rand(const double mean, const double stddev);
 static inline uint16_t clamp(const uint16_t n, const uint16_t min, const uint16_t max);
 static uint32_t open_p(const char *pathname, const int32_t flags, const mode_t mode);
-static void *malloc_p(const size_t n, const size_t size);
+static void *calloc_p(const size_t n, const size_t size);
 static void free_request_structs(http_request_t *requests);
 static void free_response_buffers(char **buffers);
 
@@ -109,19 +110,19 @@ static void fill_request_structs(http_request_t *requests, uint16_t *path_lens, 
   {
     requests[i].method = HTTP_GET;
     requests[i].path_len = path_lens[i];
-    requests[i].path = generate_random_string(charset, STR_LEN(charset), path_lens[i], MAX_PATH_LEN);
+    requests[i].path = generate_random_string(charset, STR_LEN(charset), path_lens[i]);
     requests[i].version = HTTP_1_1;
     requests[i].headers_count = headers_counts[i];
-    requests[i].headers = malloc_p(headers_counts[i], sizeof(http_header_t));
+    requests[i].headers = calloc_p(headers_counts[i], sizeof(http_header_t));
     requests[i].body_len = body_lens[i];
-    requests[i].body = generate_random_string(charset, STR_LEN(charset), body_lens[i], MAX_BODY_LEN);
+    requests[i].body = generate_random_string(charset, STR_LEN(charset), body_lens[i]);
 
     for (uint16_t j = 0; j < headers_counts[i]; j++)
     {
       requests[i].headers[j].key_len = header_key_lens[i];
-      requests[i].headers[j].key = generate_random_string(charset, STR_LEN(charset), header_key_lens[i], MAX_HEADER_KEY_LEN);
+      requests[i].headers[j].key = generate_random_string(charset, STR_LEN(charset), header_key_lens[i]);
       requests[i].headers[j].value_len = header_value_lens[i];
-      requests[i].headers[j].value = generate_random_string(charset, STR_LEN(charset), header_value_lens[i], MAX_HEADER_VALUE_LEN);
+      requests[i].headers[j].value = generate_random_string(charset, STR_LEN(charset), header_value_lens[i]);
     }
   }
 }
@@ -132,15 +133,18 @@ static void fill_response_buffers(char **buffers, uint16_t *reason_phrase_lens, 
 
   for (uint16_t i = 0; i < N_SAMPLES; i++)
   {
-    strcat(buffers[i], "HTTP/1.1 200");
-    char *reason_phrase = generate_random_string(charset, STR_LEN(charset), reason_phrase_lens[i], MAX_REASON_PHRASE_LEN);
+    buffers[i] = calloc_p(BUFFER_SIZE, sizeof(char));
+
+    strcat(buffers[i], "HTTP/1.1 200 ");
+    char *reason_phrase = generate_random_string(charset, STR_LEN(charset), reason_phrase_lens[i]);
     strcat(buffers[i], reason_phrase);
     strcat(buffers[i], "\r\n");
-    
+    free(reason_phrase);
+
     for (uint16_t j = 0; j < headers_counts[i]; j++)
     {
-      char *key = generate_random_string(charset, STR_LEN(charset), header_key_lens[i], MAX_HEADER_KEY_LEN);
-      char *value = generate_random_string(charset, STR_LEN(charset), header_value_lens[i], MAX_HEADER_VALUE_LEN);
+      char *key = generate_random_string(charset, STR_LEN(charset), header_key_lens[j]);
+      char *value = generate_random_string(charset, STR_LEN(charset), header_value_lens[j]);
 
       strcat(buffers[i], key);
       strcat(buffers[i], ": ");
@@ -150,13 +154,10 @@ static void fill_response_buffers(char **buffers, uint16_t *reason_phrase_lens, 
       free(key);
       free(value);
     }
-
     strcat(buffers[i], "\r\n");
 
-    char *body = generate_random_string(charset, STR_LEN(charset), body_lens[i], MAX_BODY_LEN);
+    char *body = generate_random_string(charset, STR_LEN(charset), body_lens[i]);
     strcat(buffers[i], body);
-
-    free(reason_phrase);
     free(body);
   }
 }
@@ -215,12 +216,45 @@ static void serialize_write(http_request_t *requests)
   close(fd);
 }
 
+static void serialize_and_write(http_request_t *requests)
+{
+  uint64_t start, end;
+  uint32_t aux;
+
+  char buffer[BUFFER_SIZE] ALIGNED(ALIGNMENT) = {0};
+  const int32_t fd = open_p("/dev/null", O_WRONLY, 0);
+  uint64_t total_cycles = 0;
+
+  printf("iterating http1_serialize_and_write() with %d samples %d times\n", N_SAMPLES, N_ITERATIONS);
+
+  for (uint16_t i = 0; i < N_SAMPLES; i++)
+  {
+    http_request_t request = requests[i];
+
+    start = __rdtscp(&aux);
+    for (uint32_t j = 0; j < N_ITERATIONS; j++)
+    {
+      const uint32_t len = http1_serialize(buffer, &request);
+      write(fd, buffer, len);
+    }
+    end = __rdtscp(&aux);
+
+    const uint64_t average_cycles = (end - start) / N_ITERATIONS;
+    total_cycles += average_cycles;
+  }
+
+  printf("serialize_and_write(): avg CPU cycles: %lu\n", total_cycles / N_SAMPLES);
+
+  close(fd);
+}
+
 static void deserialize(char **buffers)
 {
   uint64_t start, end;
   uint32_t aux;
 
-  http_response_t response = {0};
+  http_header_t headers[MAX_HEADERS_COUNT] = {0};
+  http_response_t response = { .headers = headers, .headers_count = MAX_HEADERS_COUNT };
   uint64_t total_cycles = 0;
 
   printf("iterating http1_deserialize() with %d samples %d times\n", N_SAMPLES, N_ITERATIONS);
@@ -241,15 +275,13 @@ static void deserialize(char **buffers)
   printf("deserialize(): avg CPU cycles: %lu\n", total_cycles / N_SAMPLES);
 }
 
-static char *generate_random_string(const char *charset, const uint8_t charset_len, const uint16_t median_len, const uint16_t max_len)
+static char *generate_random_string(const char *charset, const uint8_t charset_len, const uint32_t string_len)
 {
-  uint16_t len = gaussian_rand(median_len, 1);
-  len = clamp(len, 1, max_len);
-  char *str = malloc_p(len + 1, sizeof(char));
+  char *str = calloc_p(string_len + 1, sizeof(char));
 
-  for (uint16_t i = 0; i < len; i++)
+  for (uint16_t i = 0; i < string_len; i++)
     str[i] = charset[rand() % charset_len];
-  str[len] = '\0';
+  str[string_len] = '\0';
 
   return str;
 }
@@ -278,16 +310,14 @@ static uint32_t open_p(const char *pathname, const int32_t flags, const mode_t m
   return fd;
 }
 
-static void *malloc_p(const size_t n, const size_t size)
+static void *calloc_p(const size_t n, const size_t size)
 {
-  void *ptr;
-  posix_memalign(&ptr, ALIGNMENT, n * size);
+  void *ptr = calloc(n, size);
   if (!ptr)
   {
     perror(strerror(errno));
     exit(EXIT_FAILURE);
   }
-  bzero(ptr, n * size);
   return ptr;
 }
 
