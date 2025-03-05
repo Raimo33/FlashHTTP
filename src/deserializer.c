@@ -5,7 +5,7 @@ Creator: Claudio Raimondi
 Email: claudio.raimondi@pm.me                                                   
 
 created at: 2025-02-11 12:37:26                                                 
-last edited: 2025-03-04 21:20:33                                                
+last edited: 2025-03-05 21:04:20                                                
 
 ================================================================================*/
 
@@ -106,7 +106,7 @@ static uint32_t deserialize_headers(char *restrict buffer, char *const buffer_en
   http_header_t *headers = response->headers;
   uint16_t headers_count = 0;
 
-  while (LIKELY(*(uint16_t *)buffer != *(uint16_t *)"\r\n"))
+  while (LIKELY(!memcmp2(buffer, "\r\n")))
   {
     char *const key = buffer;
     buffer = memchr(buffer, ':', buffer_end - buffer);
