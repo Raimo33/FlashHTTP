@@ -107,14 +107,13 @@ Thy're are performed on the static library compiled following the <a href="../in
 <li>For write operations, <code>/dev/null</code> was used as the output file. This is to not factor in external factors such as disk speed, buffering, blocking.</li>
 </ul>
 <h2 id="http1">HTTP1</h2>
-<p><img alt="HTTP1" src="/images/benchmarks/http1.png" /></p>
+<p><img alt="HTTP1" src="../../images/benchmarks/http1.png" /></p>
 <h2 id="run-your-own-benchmarks">Run your own benchmarks</h2>
 <p>To run your own benchmarks you can follow the steps below:</p>
 <ul>
 <li>Compile the library as described in the <a href="../installation/">installation guide</a></li>
 <li>Compile the benchmark target: <code>cmake --build . --target benchmark</code></li>
 <li>Run the benchmark executable: <code>./benchmark</code></li>
-<li>Generate a plot with the results: ```python3 ./benchmarks/plot.py </li>
 </ul>
               
             </div>
