@@ -9,7 +9,7 @@ Thy're are performed on the static library compiled following the [installation 
 
 ## HTTP1
 
-![HTTP1](/images/benchmarks/http1.png)
+![HTTP1](../images/benchmarks/http1.png)
 
 ## Run your own benchmarks
 
@@ -18,4 +18,3 @@ To run your own benchmarks you can follow the steps below:
   - Compile the library as described in the [installation guide](installation.md)
   - Compile the benchmark target: ```cmake --build . --target benchmark```
   - Run the benchmark executable: ```./benchmark```
-  - Generate a plot with the results: ```python3 ./benchmarks/plot.py 

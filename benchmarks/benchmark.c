@@ -5,7 +5,7 @@ Creator: Claudio Raimondi
 Email: claudio.raimondi@pm.me                                                   
 
 created at: 2025-02-14 17:53:51                                                 
-last edited: 2025-03-04 21:20:33                                                
+last edited: 2025-03-05 14:59:48                                                
 
 ================================================================================*/
 
@@ -20,7 +20,7 @@ last edited: 2025-03-04 21:20:33
 #include <errno.h>
 
 #define N_ITERATIONS 100'000
-#define N_SAMPLES 10'000
+#define N_SAMPLES 500
 #define MEAN_PATH_LEN 15
 #define MAX_PATH_LEN 256
 #define MEAN_HEADER_KEY_LEN 10
@@ -209,6 +209,8 @@ static void serialize_write(http_request_t *requests)
       end = __rdtscp(&aux);
 
       total_cycles += (end - start);
+
+      fsync(fd);
     }
   }
 
@@ -240,6 +242,8 @@ static void serialize_and_write(http_request_t *requests)
       end = __rdtscp(&aux);
 
       total_cycles += (end - start);
+
+      fsync(fd);
     }
   }
 
@@ -256,9 +260,9 @@ static void deserialize(char **buffers)
 
   http_header_t headers[MAX_HEADERS_COUNT] ALIGNED(ALIGNMENT);
   http_response_t response ALIGNED(ALIGNMENT) = { .headers = headers, .headers_count = MAX_HEADERS_COUNT };
-  
+
   printf("iterating http1_deserialize() with %d samples %d times\n", N_SAMPLES, N_ITERATIONS);
-  
+
   for (uint16_t i = 0; i < N_SAMPLES; i++)
   {
     char buffer[BUFFER_SIZE] ALIGNED(ALIGNMENT);
@@ -266,11 +270,11 @@ static void deserialize(char **buffers)
     for (uint32_t j = 0; j < N_ITERATIONS; j++)
     {
       memcpy(buffer, buffers[i], BUFFER_SIZE);
-      
+
       start = __rdtscp(&aux);
       http1_deserialize(buffer, BUFFER_SIZE, &response);
       end = __rdtscp(&aux);
-      
+
       total_cycles += (end - start);
     }
   }

@@ -5,7 +5,7 @@ Creator: Claudio Raimondi
 Email: claudio.raimondi@pm.me                                                   
 
 created at: 2025-02-10 21:08:13                                                 
-last edited: 2025-03-04 21:20:33                                                
+last edited: 2025-03-05 14:59:48                                                
 
 ================================================================================*/
 
@@ -91,7 +91,7 @@ static char *test_deserialize_missing_header_value(void);
 static char *test_deserialize_reason_phrase_too_long(void);
 static char *test_deserialize_header_key_too_long(void);
 static char *test_deserialize_header_value_too_long(void);
-//TODO tests with \r in body and \n
+static char *test_deserialize_clrfs(void);
 
 int main(void)
 {
@@ -134,7 +134,8 @@ static char *all_tests(void)
   mu_run_test(test_deserialize_reason_phrase_too_long);
   mu_run_test(test_deserialize_header_key_too_long);
   mu_run_test(test_deserialize_header_value_too_long);
-  //TODO tests with \r in body and \n
+  mu_run_test(test_deserialize_clrfs);
+  
 
   return 0;
 }
@@ -508,7 +509,7 @@ static char *test_deserialize_normal_message(void)
   mu_assert("error: deserialize normal message: wrong length", len == expected_len);
   mu_assert("error: deserialize normal message: wrong status code", response.status_code == expected_status_code);
   mu_assert("error: deserialize normal message: wrong reason phrase", memcmp(response.reason_phrase, expected_reason_phrase, 2) == 0);
-  mu_assert("error: deserialize normal message: wrong headers count", response.headers_count == 7);
+  mu_assert("error: deserialize normal message: wrong headers count", response.headers_count == ARR_SIZE(expected_headers));
   mu_assert("error: deserialize normal message: wrong headers", compare_headers(response.headers, expected_headers, response.headers_count));
   mu_assert("error: deserialize normal message: wrong body", memcmp(response.body, expected_body, sizeof(expected_body)) == 0);
 
@@ -788,6 +789,64 @@ static char *test_deserialize_header_value_too_long(void)
   free(buffer);
 
   mu_assert("error: deserialize header value too long: should fail", len == 0);
+
+  return 0;
+}
+
+static char *test_deserialize_clrfs(void)
+{
+  char buffer[] =
+    "HTTP/1.1 200 OK\n\r\r\n"
+    "Content-Type: text/html; charset=UTF-8\r\n"
+    "Content-Length: 1234\n\r\n"
+    "Connection: keep-alive\r\r\n"
+    "Server: Apa\nche/2.4.41 (Unix)\r\n"
+    "Cache-Control: max-age=3600\r\n"
+    "ETag: \"abc123\"\r\n"
+    "Date: Mon, 01 Jan 2023 12:00:00 GMT\r\r\n\r\n"
+    "\r\n"
+    "<!DOCTYPE html>\n"
+    "<html>\n"
+    "<head>\n"
+    "<title>Example \r\nPage</title>\n"
+    "</head>\n"
+    "<body>\n"
+    "<h1>This is the body of the response</h1>\n"
+    "</body>\n"
+    "</html>";
+  const uint16_t expected_status_code = 200;
+  const char expected_reason_phrase[] = "OK\n\r";
+  const http_header_t expected_headers[] = {
+    { .key = "Content-Type",    .value = "text/html; charset=UTF-8",        .key_len = 12,  .value_len = 24 },
+    { .key = "Content-Length",  .value = "1234\n",                          .key_len = 14,  .value_len = 5 },
+    { .key = "Connection",      .value = "keep-alive\r",                    .key_len = 10,  .value_len = 11 },
+    { .key = "Server",          .value = "Apa\nche/2.4.41 (Unix)",          .key_len = 6,   .value_len = 20 },
+    { .key = "Cache-Control",   .value = "max-age=3600",                    .key_len = 13,  .value_len = 12 },
+    { .key = "ETag",            .value = "\"abc123\"",                      .key_len = 4,   .value_len = 8 },
+    { .key = "Date",            .value = "Mon, 01 Jan 2023 12:00:00 GMT\r", .key_len = 4,   .value_len = 30 }
+  };
+  const char expected_body[] =
+    "\r\n"
+    "<!DOCTYPE html>\n"
+    "<html>\n"
+    "<head>\n"
+    "<title>Example \r\nPage</title>\n"
+    "</head>\n"
+    "<body>\n"
+    "<h1>This is the body of the response</h1>\n"
+    "</body>\n"
+    "</html>";
+
+  http_header_t headers[ARR_SIZE(expected_headers)] = {0};
+  http_response_t response = { .headers = headers, .headers_count = ARR_SIZE(expected_headers) };
+  const uint32_t len = http1_deserialize(buffer, sizeof(buffer), &response);
+
+  mu_assert("error: deserialize newlines: wrong length", len == STR_LEN(buffer) - STR_LEN(expected_body));
+  mu_assert("error: deserialize newlines: wrong status code", response.status_code == expected_status_code);
+  mu_assert("error: deserialize newlines: wrong reason phrase", memcmp(response.reason_phrase, expected_reason_phrase, 4) == 0);
+  mu_assert("error: deserialize newlines: wrong headers count", response.headers_count == ARR_SIZE(expected_headers));
+  mu_assert("error: deserialize newlines: wrong headers", compare_headers(response.headers, expected_headers, response.headers_count));
+  mu_assert("error: deserialize newlines: wrong body", memcmp(response.body, expected_body, sizeof(expected_body)) == 0);
 
   return 0;
 }
