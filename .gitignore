@@ -4,7 +4,7 @@
 *.a
 *.o
 *.so
-libflashttp.*
+libflashhttp.*
 test
 benchmark
 benchmark

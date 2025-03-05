@@ -3,7 +3,7 @@
 ## Serialization
 
 ```c
-#include <flashttp/serialization.h>
+#include <flashhttp/serialization.h>
 
 #define STR_LEN(s)  (sizeof(s) - 1)
 #define ARR_SIZE(a) (sizeof(a) / sizeof(a[0]))
@@ -54,7 +54,7 @@ const http_request_t request = {
 ## Deserialization
 
 ```c
-#include <flashttp/deserialization.h>
+#include <flashhttp/deserialization.h>
 
 /*...*/
 

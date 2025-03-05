@@ -1,4 +1,4 @@
-site_name: FlasHTTP Documentation
+site_name: FlashHTTP Documentation
 nav:
   - Home: index.md
   - Building and Testing:
@@ -10,7 +10,7 @@ nav:
     - Deserialization: api-reference/deserialization.md
     - Data Structures: api-reference/data-structures.md
   - Examples: examples.md
-repo_url: https://github.com/Raimo33/FlasHTTP
+repo_url: https://github.com/Raimo33/FlashHTTP
 theme:
   name: readthedocs
 

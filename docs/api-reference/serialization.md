@@ -3,7 +3,7 @@
 The following function prototypes can be found in the `serialization.h` header file.
 
 ```c
-#include <flashttp/serialization.h>
+#include <flashhttp/serialization.h>
 ```
 
 These functions **don't check the validity of messages**, they assume that the message struct is already correctly filled with the right values.

@@ -3,7 +3,7 @@
 The following function prototypes can be found in the `deserialization.h` header file.
 
 ```c
-#include <flashttp/deserialization.h>
+#include <flashhttp/deserialization.h>
 ```
 
 These functions **only verify the structural integrity** of messages in terms of format. The body is served raw, without any decoding or parsing. It is up to the user to interpret the headers and eventually decode the body. Duplicate headers are not concatenated, but stored as separate fields.

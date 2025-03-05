@@ -14,7 +14,7 @@ Both parts share the same [data structures](data-structures.md).
 You can include both the serialization and deserialization headers in your project by including the main header file:
 
 ```c
-#include <flashttp.h>
+#include <flashhttp.h>
 ```
 
 otherwise, you can selectively include the headers you need:

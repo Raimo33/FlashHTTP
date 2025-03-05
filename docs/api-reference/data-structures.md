@@ -2,7 +2,7 @@
 
 ## Messages
 
-Included in the `flashttp/structs.h` header file.
+Included in the `flashhttp/structs.h` header file.
 
 ```c
 typedef enum: uint8_t {

@@ -1,6 +1,6 @@
 # Installation Guide
 
-To install FlasHTTP you must compile it from source, as that will guarantee the best performance.
+To install FlashHTTP you must compile it from source, as that will guarantee the best performance.
 
 ## Requirements
 
@@ -10,7 +10,7 @@ To install FlasHTTP you must compile it from source, as that will guarantee the 
 
 ## Building
 
-  - Clone the repository: ```git clone https://github.com/Raimo33/FlasHTTP.git``` or download the source code from the [release page](https://github.com/Raimo33/FlasHTTP/releases)
+  - Clone the repository: ```git clone https://github.com/Raimo33/FlashHTTP.git``` or download the source code from the [release page](https://github.com/Raimo33/FlashHTTP/releases)
   - Generate the build files: ```cmake .```
   - Build the library: ```cmake --build . --parallel```
   - Optionally install the library: ```cmake --install . --parallel```
@@ -20,4 +20,4 @@ To install FlasHTTP you must compile it from source, as that will guarantee the 
   - Compile the tests: ```cmake --build . --parallel --target test```
   - Run the test executable: ```./test```
 
-in case of failure, please open an issue on [GitHub](https://github.com/Raimo33/FlasHTTP/labels/test-failed) if there isn't one already.
+in case of failure, please open an issue on [GitHub](https://github.com/Raimo33/FlashHTTP/labels/test-failed) if there isn't one already.
