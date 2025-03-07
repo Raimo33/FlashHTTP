@@ -19,7 +19,7 @@ last edited: 2025-03-05 21:11:45
 #include <unistd.h>
 #include <errno.h>
 
-#define N_ITERATIONS 100'000
+#define N_ITERATIONS 10'000
 #define N_SAMPLES 500
 #define MEAN_PATH_LEN 15
 #define MAX_PATH_LEN 256
