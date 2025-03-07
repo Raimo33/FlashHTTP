@@ -7,9 +7,7 @@ set(CMAKE_C_EXTENSIONS OFF)
 
 set(FLASHHTTP_COMPILE_OPTIONS
   -Wall -Wextra -Wpedantic
-  -fwrapv -fno-strict-aliasing -O3 -march=native -flto
-  -fno-semantic-interposition -fno-stack-protector -fno-plt
-  -fno-asynchronous-unwind-tables -funroll-loops -fomit-frame-pointer
+  -O3 -march=native -flto
 )
 
 set(SOURCES

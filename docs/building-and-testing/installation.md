@@ -6,6 +6,7 @@ To install FlashHTTP you must compile it from source, as that will guarantee the
 
   - CMake 3.10 or later
   - gcc with c23 support
+  - glibc
   - CPU with misaligned memory access support
 
 ## Building
