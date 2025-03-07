@@ -56,7 +56,7 @@
                   </li>
                   <li class="toctree-l1"><a class="reference internal" href="../serialization/">Serialization</a>
                   </li>
-                  <li class="toctree-l1 current"><a class="reference internal current" href="#">Deserialization</a>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="./">Deserialization</a>
     <ul class="current">
     <li class="toctree-l2"><a class="reference internal" href="#http1_deserialize">http1_deserialize</a>
         <ul>
@@ -120,12 +120,10 @@
 <ul>
 <li><code>buffer</code> - the buffer which contains the full serialized response</li>
 <li><code>buffer_size</code> - the size of the buffer in bytes</li>
-<li><code>response</code> - the response struct where to store the deserialized fields, with the following conditions:<ul>
+<li><code>response</code> - the response struct where to store the deserialized fields, with the following conditions:</li>
 <li><code>headers</code> already allocated with a number of fields that matches the expected number of headers</li>
 <li><code>headers_count</code> set to the number of allocated headers</li>
 <li>everything else should be zeroed (<code>0</code>' or <code>NULL</code>)</li>
-</ul>
-</li>
 </ul>
 <h3 id="returns">Returns</h3>
 <ul>
